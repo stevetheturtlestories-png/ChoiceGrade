@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const PRICE_IDS = {
-  project_30: "price_1UEI7A0UVkfOUpU40MBdfNnU",
-  lifetime: "price_1UEIDr0UVkfOUpU4hMhYxsWN",
+  project_30: "price_1UFNJ90Ej99Aw7hgSGQ80RFT",
+  lifetime: "price_1UFNJA0Ej99Aw7hgREtAs2tb",
 };
 
 const APP_URL = (
