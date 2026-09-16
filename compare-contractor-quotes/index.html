@@ -1,0 +1,847 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11263a">
+
+  <title>How to Compare Contractor Quotes Before You Sign | ChoiceGrade</title>
+  <meta name="description" content="A practical homeowner guide to comparing contractor bids: scope, allowances, exclusions, permits, change orders, payment schedules, warranties, and questions to send each bidder.">
+  <link rel="canonical" href="https://choicegradeapp.com/compare-contractor-quotes/">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How to Compare Contractor Quotes Before You Sign">
+  <meta property="og:description" content="A plain-English checklist, real homeowner examples, and a ready-to-send email for clarifying bids.">
+  <meta property="og:url" content="https://choicegradeapp.com/compare-contractor-quotes/">
+
+  <link rel="icon" type="image/png" href="../choicegrade-app-icon.png">
+
+  <style>
+    :root {
+      --navy: #11263a;
+      --green: #0f8f67;
+      --paper: #f4f7f9;
+      --ink: #15202b;
+      --muted: #667085;
+      --line: #dbe4ea;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    a { color: #176f81; }
+    a:hover { text-decoration-thickness: 2px; }
+
+    .siteHeader {
+      background: var(--navy);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px max(18px, calc((100vw - 1100px) / 2));
+    }
+
+    .brandLink {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .brandIcon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: white;
+      object-fit: contain;
+    }
+
+    .brandLink strong {
+      font-size: 18px;
+      letter-spacing: .05em;
+    }
+
+    .brandLink small {
+      display: block;
+      font-size: 10px;
+      opacity: .75;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 14px;
+    }
+
+    .nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .navButton, .primary, .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-weight: 750;
+      min-height: 46px;
+      text-decoration: none;
+    }
+
+    .navButton, .primary {
+      background: var(--green);
+      color: white !important;
+    }
+
+    .secondary {
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--navy) !important;
+    }
+
+    .kicker, .exampleLabel {
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #176f81;
+    }
+
+    .articleShell {
+      max-width: 860px;
+      padding: 0 20px 70px;
+      margin: auto;
+    }
+
+    .articleHero { padding: 62px 0 25px; }
+
+    .articleHero h1 {
+      font-size: clamp(38px, 6vw, 66px);
+      line-height: 1.06;
+      letter-spacing: -.04em;
+      color: var(--navy);
+      margin: 14px 0;
+    }
+
+    .lead {
+      font-size: 21px;
+      line-height: 1.5;
+      color: #394955;
+    }
+
+    .heroLinks {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .articleShell section, .quickTake, .contents {
+      margin-top: 50px;
+    }
+
+    .articleShell section h2, .articleCta h2 {
+      font-size: clamp(28px, 4vw, 38px);
+      line-height: 1.16;
+      letter-spacing: -.025em;
+      color: var(--navy);
+      margin: 0 0 18px;
+    }
+
+    .articleShell section p, .articleShell section li {
+      font-size: 17px;
+      line-height: 1.7;
+      color: #394955;
+    }
+
+    .articleShell section p { margin: 0 0 16px; }
+
+    .quickTake {
+      background: #e9f6ef;
+      border-left: 5px solid var(--green);
+      border-radius: 0 15px 15px 0;
+      padding: 22px 25px;
+    }
+
+    .quickTake strong {
+      font-size: 19px;
+      color: var(--navy);
+    }
+
+    .quickTake p {
+      font-size: 17px;
+      line-height: 1.6;
+      margin: 9px 0 0;
+    }
+
+    .contents {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 15px;
+      padding: 19px 23px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 20px;
+    }
+
+    .contents strong { width: 100%; }
+    .contents a { font-size: 14px; }
+
+    .example, .closing, .story, .template {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .example, .closing { margin: 23px 0; }
+
+    .exampleLabel {
+      display: block;
+      color: #0c7555;
+      margin-bottom: 11px;
+    }
+
+    .compareGrid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .compareGrid > div {
+      background: var(--paper);
+      border-radius: 11px;
+      padding: 16px;
+    }
+
+    .compareGrid strong { color: var(--navy); }
+
+    .compareGrid p {
+      font-size: 15px !important;
+      margin: 5px 0 0 !important;
+    }
+
+    .tableScroll {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: white;
+      margin: 22px 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 620px;
+      text-align: left;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    thead {
+      background: var(--navy);
+      color: white;
+    }
+
+    tbody th { color: var(--navy); }
+    tbody tr:last-child > * { border-bottom: 0; }
+
+    .articleShell .note {
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .storyGrid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .story h3, .closing h3 {
+      font-size: 23px;
+      color: var(--navy);
+      margin: 0 0 10px;
+    }
+
+    .story p:last-child, .closing p:last-child { margin-bottom: 0; }
+    .template ol { padding-left: 24px; }
+    .decisionList { padding-left: 24px; }
+    .decisionList li { margin-bottom: 16px; }
+
+    .articleCta {
+      background: var(--navy);
+      color: white;
+      border-radius: 20px;
+      padding: 28px 30px;
+      margin-top: 60px;
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      justify-content: space-between;
+    }
+
+    .articleCta h2 {
+      color: white;
+      margin: 8px 0;
+    }
+
+    .articleCta p {
+      color: #d8e5ed;
+      line-height: 1.55;
+    }
+
+    .articleCta .kicker { color: #8bc8ad; }
+    .articleCta .primary { white-space: nowrap; }
+
+    .articleShell .sources {
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      margin-top: 26px;
+    }
+
+    .sources h2 { font-size: 22px !important; }
+    .sources li { font-size: 14px !important; margin: 6px 0; }
+
+    .sources p {
+      font-size: 13px !important;
+      color: var(--muted) !important;
+    }
+
+    footer {
+      background: #0b1d2c;
+      color: white;
+      padding: 32px max(18px, calc((100vw - 1100px) / 2));
+      font-size: 13px;
+    }
+
+    footer > div {
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .footerLinks {
+      display: flex;
+      gap: 18px;
+    }
+
+    .footerLinks a { color: white; }
+
+    footer p {
+      opacity: .7;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 650px) {
+      .siteHeader { padding: 10px 14px; }
+      .nav { gap: 9px; }
+      .nav > a:not(.navButton) { display: none; }
+      .brandLink small { display: none; }
+      .articleShell { padding: 0 16px 55px; }
+      .articleHero { padding-top: 40px; }
+      .heroLinks { display: grid; }
+      .heroLinks a { width: 100%; }
+      .compareGrid { grid-template-columns: 1fr; }
+      .contents { display: block; }
+      .contents a { display: block; margin: 8px 0; }
+      .articleCta { display: block; padding: 23px; }
+      .articleCta .primary { width: 100%; margin-top: 12px; }
+      .story, .template { padding: 19px; }
+    }
+
+    @media print {
+      body { background: white; }
+
+      .siteHeader, footer, .heroLinks, .articleCta, .contents {
+        display: none !important;
+      }
+
+      .articleShell { max-width: none; padding: 0; }
+      .articleHero { padding: 0; }
+      .story, .template, .quickTake { break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="siteHeader">
+    <a href="../" class="brandLink" aria-label="ChoiceGrade home">
+      <img src="../choicegrade-mark.png" alt="" class="brandIcon">
+      <span>
+        <strong>CHOICE<span>GRADE</span></strong>
+        <small>Home Contractor Decoder</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <a href="../">Home</a>
+      <a href="#checklist">Checklist</a>
+      <a href="#questions">Questions</a>
+      <a href="../app.html" class="navButton">Start free</a>
+    </nav>
+  </header>
+
+  <main class="articleShell">
+    <article>
+      <header class="articleHero">
+        <p class="kicker">FREE HOMEOWNER GUIDE · UPDATED SEPTEMBER 2026</p>
+
+        <h1>How to compare contractor quotes before you sign</h1>
+
+        <p class="lead">
+          Three bids can describe three different jobs. Use this guide to find
+          the differences that affect what you get, what you pay, and what
+          happens when the work gets complicated.
+        </p>
+
+        <div class="heroLinks">
+          <a class="primary" href="#checklist">Jump to the checklist</a>
+          <a class="secondary" href="#questions">Get the email template</a>
+        </div>
+      </header>
+
+      <aside class="quickTake" aria-label="The short version">
+        <strong>The short version</strong>
+        <p>
+          Send every bidder the same scope. Compare what each proposal
+          <em>includes, excludes, and assumes</em>. Get the missing answers
+          in writing. Check the contractor separately. Then choose based on
+          the complete offer—not just the number at the bottom.
+        </p>
+      </aside>
+
+      <nav class="contents" aria-label="On this page">
+        <strong>In this guide</strong>
+        <a href="#same-job">1. Make the bids comparable</a>
+        <a href="#checklist">2. Compare seven essentials</a>
+        <a href="#real-world">3. Learn from real homeowner situations</a>
+        <a href="#questions">4. Send one clarification email</a>
+        <a href="#choose">5. Choose and sign carefully</a>
+      </nav>
+
+      <section id="same-job">
+        <h2>First, make sure they are bidding the same job</h2>
+
+        <p>
+          Write a short project brief before asking for quotes: what needs
+          replacing or repairing, the outcome you want, measurements or photos
+          you have, material preferences, and work you expect to be included
+          (removal, disposal, finishing, cleanup). Give the same brief to each
+          contractor. If the bids are already in your inbox, you can still
+          send a single clarification list to all of them.
+        </p>
+
+        <p>
+          A lower quote can be a good offer. It can also omit part of the work,
+          use a smaller allowance, or leave an unknown cost for later. A higher
+          quote can reflect more complete work—or simply a different business
+          price. <strong>Find out which before you rank them.</strong> The
+          <a href="https://consumer.ftc.gov/articles/how-avoid-home-improvement-scam">Federal Trade Commission</a>
+          recommends multiple written estimates and an explanation when
+          prices differ substantially.
+        </p>
+
+        <div class="example">
+          <span class="exampleLabel">Illustrative comparison—not market pricing</span>
+
+          <div class="compareGrid">
+            <div>
+              <strong>Bid A · $12,000</strong>
+              <p>“Replace roof.” No detail on flashing or damaged decking.</p>
+            </div>
+
+            <div>
+              <strong>Bid B · $14,000</strong>
+              <p>
+                Specifies flashing, disposal and a per-sheet price if rotten
+                decking is found.
+              </p>
+            </div>
+          </div>
+
+          <p>
+            The $2,000 gap does not prove which is better. Ask A to price the
+            missing items, and ask B what the decking allowance covers. You
+            are buying a defined scope, not a price tag.
+          </p>
+        </div>
+      </section>
+
+      <section id="checklist">
+        <h2>The seven things to compare, line by line</h2>
+
+        <p>
+          For every line, mark <strong>included</strong>,
+          <strong>excluded</strong>, <strong>allowance</strong>, or
+          <strong>unclear</strong>. “Unclear” means ask; it does not mean the
+          contractor intends to leave it out.
+        </p>
+
+        <div class="tableScroll">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Compare</th>
+                <th scope="col">What to look for</th>
+                <th scope="col">One question to ask</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <th scope="row">1. Scope</th>
+                <td>
+                  Exact areas, quantities, removal, prep, installation,
+                  finish work and cleanup.
+                </td>
+                <td>“What work is excluded from this price?”</td>
+              </tr>
+
+              <tr>
+                <th scope="row">2. Materials</th>
+                <td>
+                  Brand/model, dimensions, grade, finish, substitutions
+                  and who supplies them.
+                </td>
+                <td>
+                  “Which exact products are included, and what happens
+                  if they are unavailable?”
+                </td>
+              </tr>
+
+              <tr>
+                <th scope="row">3. Allowances &amp; unknowns</th>
+                <td>
+                  Budget placeholders for items not selected yet; conditions
+                  hidden behind walls or under roofs; unit prices for extra work.
+                </td>
+                <td>
+                  “Which amounts are allowances, and how will overages
+                  be approved?”
+                </td>
+              </tr>
+
+              <tr>
+                <th scope="row">4. Permits &amp; other trades</th>
+                <td>
+                  Who obtains permits, arranges inspections, coordinates
+                  electrical/plumbing work and pays related fees.
+                </td>
+                <td>
+                  “Who handles required permits, inspections, and
+                  other trades?”
+                </td>
+              </tr>
+
+              <tr>
+                <th scope="row">5. Timing</th>
+                <td>
+                  Expected start, duration, dependencies, work hours,
+                  access, delays and who manages the job.
+                </td>
+                <td>
+                  “What could delay this schedule, and who will update me?”
+                </td>
+              </tr>
+
+              <tr>
+                <th scope="row">6. Payments &amp; changes</th>
+                <td>
+                  Deposit, progress payments tied to milestones, change-order
+                  process and when final payment is due.
+                </td>
+                <td>
+                  “Will I approve the price and time impact of changes
+                  in writing before extra work starts?”
+                </td>
+              </tr>
+
+              <tr>
+                <th scope="row">7. Warranty &amp; follow-up</th>
+                <td>
+                  Separate workmanship and product warranties, exclusions,
+                  who handles a callback, and what documents you receive.
+                </td>
+                <td>
+                  “Who fixes a problem after completion, and for how long?”
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="note">
+          A contractor may reasonably quote a fixed total without disclosing
+          their own costs or profit. You still need enough detail to know
+          <em>what you are buying</em> and how changes will be priced.
+        </p>
+      </section>
+
+      <section id="real-world">
+        <h2>What real homeowner discussions reveal</h2>
+
+        <p>
+          These are paraphrased examples from public conversations, offered
+          as illustrations—not verified outcomes or representative prices.
+        </p>
+
+        <div class="storyGrid">
+          <div class="story">
+            <span class="exampleLabel">Kitchen remodel · allowances</span>
+            <h3>Two cabinet budgets, one “same” kitchen</h3>
+
+            <p>
+              In a
+              <a href="https://www.reddit.com/r/HomeImprovement/comments/1sgczx1/got_3_contractor_bids_for_my_kitchen_the_price/">homeowner discussion about three very different kitchen bids</a>,
+              another homeowner described cabinet allowances of $15,000 and
+              $30,000 in separate estimates. If your chosen cabinets cost
+              more than the smaller allowance, that initial price gap may
+              narrow quickly.
+            </p>
+
+            <p>
+              <strong>Ask:</strong> Which fixtures and finishes are
+              placeholders? What quality and quantity does each allowance buy?
+              Is installation included?
+            </p>
+          </div>
+
+          <div class="story">
+            <span class="exampleLabel">Roof · hidden work</span>
+            <h3>The difference may be under the shingles</h3>
+
+            <p>
+              In a
+              <a href="https://www.reddit.com/r/Roofing/comments/xr8mi5/help_me_compare_roof_replacement_quotes/">three-quote roofing comparison</a>,
+              the proposals handled damaged roof decking, chimney flashing,
+              disposal, permits and warranties differently. A contractor
+              cannot always know the full condition of decking until the old
+              roof is removed; the useful comparison is the included quantity
+              and the agreed price for additional repairs.
+            </p>
+
+            <p>
+              <strong>Ask:</strong> How much decking repair is included?
+              What is the unit price beyond that? Will you show me the
+              damage before replacing more?
+            </p>
+          </div>
+
+          <div class="story">
+            <span class="exampleLabel">Kitchen · change order</span>
+            <h3>Surprises need a process before demolition</h3>
+
+            <p>
+              One
+              <a href="https://www.reddit.com/r/HomeImprovement/comments/aj6bl1/question_about_change_order_for_a_kitchen_remodel/">homeowner described a $3,500 change order</a>
+              after water-damaged drywall appeared behind removed cabinets.
+              Hidden damage can be genuine. Agree in advance on documentation,
+              options, price and schedule approval before extra work proceeds.
+            </p>
+
+            <p>
+              <strong>Ask:</strong> If you uncover damage, will you pause,
+              photograph it, and send a written change proposal before
+              proceeding?
+            </p>
+          </div>
+        </div>
+
+        <p class="note">
+          The lesson from these threads is not “always pick the middle bid.”
+          It is to uncover the assumptions that make each bid different.
+        </p>
+      </section>
+
+      <section id="questions">
+        <h2>A clarification email you can actually send</h2>
+
+        <p>
+          Keep the tone straightforward. Send the relevant questions to
+          each bidder and ask them to attach the answers to a revised
+          estimate or contract.
+        </p>
+
+        <div class="template">
+          <p>
+            <strong>Subject:</strong>
+            A few questions about your proposal for [project]
+          </p>
+
+          <p>Hi [name],</p>
+
+          <p>
+            Thanks for the estimate. Before I make a decision, could you
+            please confirm the following in writing?
+          </p>
+
+          <ol>
+            <li>
+              What exact work, materials, removal, disposal and cleanup
+              are included? What is excluded?
+            </li>
+            <li>
+              Which items are allowances or provisional amounts, and
+              what are the amounts?
+            </li>
+            <li>
+              Who arranges and pays for any required permits, inspections
+              and other trades?
+            </li>
+            <li>
+              If hidden damage or another change comes up, how will you
+              document, price and get approval before doing extra work?
+            </li>
+            <li>
+              What are the expected start date, duration and payment
+              milestones?
+            </li>
+            <li>
+              What workmanship and product warranties apply, and who
+              handles any follow-up?
+            </li>
+          </ol>
+
+          <p>
+            If it’s easier, an updated written estimate with these details
+            would be great. Thanks, [your name]
+          </p>
+        </div>
+      </section>
+
+      <section id="choose">
+        <h2>Before you choose a contractor</h2>
+
+        <ul class="decisionList">
+          <li>
+            <strong>Verify the business yourself.</strong> Check any license
+            your location requires through the relevant government authority,
+            ask for proof of insurance, and speak with recent references.
+            Rules differ by place and project.
+            <a href="https://consumer.ftc.gov/articles/how-avoid-home-improvement-scam">FTC guidance</a>
+          </li>
+
+          <li>
+            <strong>Check who will do the work.</strong> Ask whether the bidder,
+            employees or subcontractors will be on site and who is responsible
+            for coordination and warranty calls.
+          </li>
+
+          <li>
+            <strong>Compare the final written versions.</strong> Put revised
+            scope, materials, allowances, exclusions, schedule and total price
+            side by side. A clear, responsive bidder earns confidence, but a
+            polished quote alone does not prove workmanship.
+          </li>
+
+          <li>
+            <strong>Read the contract and payment schedule.</strong> Get
+            important promises and changes in writing. Avoid paying the full
+            amount up front; check local down-payment rules and inspection
+            requirements.
+            <a href="https://consumer.ftc.gov/articles/how-avoid-home-improvement-scam">FTC</a>
+            ·
+            <a href="https://ag.ny.gov/publications/hiring-home-improvement-contractor">New York Attorney General</a>
+          </li>
+
+          <li>
+            <strong>Keep a project record.</strong> Save the estimate,
+            contract, emails, change orders, photos, permits, inspection
+            results, invoices and warranty documents.
+          </li>
+        </ul>
+
+        <div class="closing">
+          <h3>One final test</h3>
+          <p>
+            Can you explain in a few sentences what is included, what could
+            cost extra, who is responsible for each step, and how a problem
+            will be fixed? If not, ask for clarification before signing.
+          </p>
+        </div>
+      </section>
+
+      <aside class="articleCta">
+        <div>
+          <span class="kicker">PUT YOUR QUOTES SIDE BY SIDE</span>
+          <h2>Want help organizing the answers?</h2>
+          <p>
+            ChoiceGrade helps you compare 2–5 contractor proposals and turn
+            missing details into follow-up questions. It supports your
+            decision; it does not verify contractors or guarantee outcomes.
+          </p>
+        </div>
+
+        <a class="primary" href="../app.html">Start a free comparison</a>
+      </aside>
+
+      <section class="sources">
+        <h2>Sources and further reading</h2>
+
+        <ul>
+          <li>
+            <a href="https://consumer.ftc.gov/articles/how-avoid-home-improvement-scam">Federal Trade Commission: How to avoid a home improvement scam</a>
+          </li>
+          <li>
+            <a href="https://ag.ny.gov/publications/hiring-home-improvement-contractor">New York Attorney General: Hiring a home-improvement contractor</a>
+          </li>
+          <li>
+            <a href="https://www.cslb.ca.gov/Consumers/Hire_A_Contractor/">California Contractors State License Board: Hire a licensed contractor</a>
+          </li>
+          <li>
+            <a href="https://www.reddit.com/r/HomeImprovement/comments/1sgczx1/got_3_contractor_bids_for_my_kitchen_the_price/">Homeowner discussion: comparing kitchen bids</a>
+          </li>
+          <li>
+            <a href="https://www.reddit.com/r/Roofing/comments/xr8mi5/help_me_compare_roof_replacement_quotes/">Homeowner discussion: comparing roof bids</a>
+          </li>
+          <li>
+            <a href="https://www.reddit.com/r/HomeImprovement/comments/aj6bl1/question_about_change_order_for_a_kitchen_remodel/">Homeowner discussion: kitchen change order</a>
+          </li>
+        </ul>
+
+        <p>
+          Public discussion examples are anecdotes. Permits, licensing,
+          deposit limits and contract rules vary by location; check your
+          local authority.
+        </p>
+      </section>
+    </article>
+  </main>
+
+  <footer>
+    <div>
+      <strong>ChoiceGrade</strong>
+      <span>Compare Quotes. Ask Smarter. Choose with Confidence.</span>
+    </div>
+
+    <div class="footerLinks">
+      <a href="../">Home</a>
+      <a href="../app.html">Start free</a>
+      <a href="#checklist">Checklist</a>
+    </div>
+
+    <p>
+      ChoiceGrade is a decision-support tool. It does not guarantee contractor
+      quality, workmanship, licensing status or final project cost.
+    </p>
+  </footer>
+</body>
+</html>
