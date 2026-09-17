@@ -13,7 +13,7 @@
 
   <link rel="manifest" href="manifest.json?v=6.3">
   <link rel="icon" type="image/png" href="choicegrade-app-icon.png">
-  <link rel="stylesheet" href="styles.css?v=6.3">
+  <link rel="stylesheet" href="styles.css?v=6.5">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
@@ -115,7 +115,7 @@
 
       <div class="trust">
         ✓ Local-first privacy &nbsp;
-        ✓ 2–5 contractors &nbsp;
+        ✓ 1–5 contractors &nbsp;
         ✓ U.S. / Canada friendly
       </div>
 
@@ -182,7 +182,7 @@
       </div>
 
       <label>
-        How many contractors are you comparing?
+        How many quotes do you have?
         <div
           id="countButtons"
           class="choiceRow"
@@ -217,6 +217,15 @@
       id="contractorForm"
       class="card"
     ></div>
+
+    <div class="card" id="scannerCard">
+      <h2>Scan this quote</h2>
+      <p class="muted">Optional. Upload a PDF or photo and review every suggested detail before using it. Files are sent for analysis and are not saved with your project.</p>
+      <input id="quoteFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp">
+      <div class="actions"><button class="secondary" type="button" onclick="scanQuote()">Read quote</button></div>
+      <div id="scanStatus" role="status"></div>
+      <div id="scanPreview"></div>
+    </div>
 
   </section>
 
@@ -447,7 +456,7 @@
     </div>
 
     <h1>
-      Your comparison is ready.
+      Your quote review is ready.
     </h1>
 
     <p
@@ -484,6 +493,16 @@
 
       <div id="clarifications"></div>
 
+    </div>
+
+    <div class="card">
+      <h2>Check a contractor's reply</h2>
+      <p class="muted">Paste the email or text they sent back. Review the suggested answers before applying them to your report.</p>
+      <label>Contractor<select id="replyContractor"></select></label>
+      <label>Reply<textarea id="replyText" rows="6" maxlength="12000" placeholder="Paste their response here"></textarea></label>
+      <button class="secondary" onclick="checkReply()">Analyze reply</button>
+      <div id="replyStatus" role="status"></div>
+      <div id="replyPreview"></div>
     </div>
 
     <div class="card">
@@ -535,7 +554,8 @@
 </footer>
 
 
-<script src="app.js?v=6.3"></script>
+<script src="app.js?v=6.5"></script>
+<script src="analysis.js?v=6.5"></script>
 
 
 <div
