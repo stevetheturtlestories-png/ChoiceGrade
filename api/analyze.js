@@ -1,18 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } };
-const origins = new Set(['https://choicegradeapp.com', 'https://www.choicegradeapp.com']);
 const choices = new Set(['Yes', 'Partly', 'Not Clear', 'No', 'N/A']);
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
-  if (origins.has(origin)) res.setHeader('Access-Control-Allow-Origin', origin);
+  const requestOrigin = `${req.headers['x-forwarded-proto']?.split(',')[0] || 'https'}://${req.headers.host}`;
+  if (origin && origin !== requestOrigin) return res.status(403).json({ error: 'Invalid origin.' });
+  if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed.' });
-  if (origin && !origins.has(origin)) return res.status(403).json({ error: 'Invalid origin.' });
   if (!process.env.OPENAI_API_KEY || !process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY)
     return res.status(503).json({ error: 'Document analysis is not configured yet.' });
   try {
