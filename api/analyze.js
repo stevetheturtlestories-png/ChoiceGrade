@@ -62,6 +62,8 @@ export default async function handler(req, res) {
       const error = new Error(`OpenAI status ${response.status}: ${raw.error?.message || 'unknown'}`);
       error.providerStatus = response.status;
       error.providerCode = raw.error?.code;
+      error.providerParam = raw.error?.param;
+      error.providerMessage = raw.error?.message;
       throw error;
     }
     const output = raw.output?.flatMap(x => x.content || []).find(x => x.type === 'output_text')?.text;
@@ -80,9 +82,13 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.error('ChoiceGrade analysis:', e);
+    const providerDetail = String(e.providerMessage || '').toLowerCase();
     const code = e.providerCode === 'insufficient_quota' ? 'account_quota'
       : e.providerStatus === 401 ? 'api_key_rejected'
       : e.providerStatus === 429 ? 'rate_limit'
+      : e.providerStatus === 400 && /image|jpeg|png|webp|bitmap/.test(providerDetail) ? 'invalid_image'
+      : e.providerStatus === 400 && /pdf|file_data|input_file|invalid file/.test(providerDetail) ? 'invalid_pdf'
+      : e.providerStatus === 400 && /model|does not support|unsupported/.test(providerDetail) ? 'invalid_model'
       : e.providerStatus === 400 ? 'request_rejected'
       : e.providerStatus === 403 ? 'api_access_denied'
       : e.message === 'No analysis returned' ? 'empty_response'
@@ -92,7 +98,10 @@ export default async function handler(req, res) {
       account_quota: 'The OpenAI API account has no available quota. Check its billing and usage settings.',
       api_key_rejected: 'The OpenAI API key was rejected. Check the key in Vercel Preview environment variables.',
       rate_limit: 'The OpenAI API is rate limiting this request. Try again later.',
-      request_rejected: 'The OpenAI API rejected this document or request. Try a JPG or PNG photo of the quote.',
+      invalid_image: 'OpenAI could not read this image. Try taking a fresh screenshot or photo and upload that JPG or PNG.',
+      invalid_pdf: 'OpenAI could not read this PDF. Try a screenshot or photo of the quote as a JPG or PNG.',
+      invalid_model: 'The configured OpenAI model does not support this scan. Ask the site owner to check OPENAI_ANALYSIS_MODEL.',
+      request_rejected: 'OpenAI rejected the scan request. Share this code with support so we can check the server logs.',
       api_access_denied: 'The OpenAI API account does not have access to the configured model.',
       empty_response: 'The analysis service returned no readable answer. Try a clearer quote photo.',
       invalid_response: 'The analysis service returned an unreadable answer. Try again.',
