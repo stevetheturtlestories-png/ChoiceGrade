@@ -12,8 +12,12 @@ async function analyze(kind, body) {
   const response = await fetch('/api/analyze', { method: 'POST', headers: {
     'Content-Type': 'application/json', Authorization: `Bearer ${token}`
   }, body: JSON.stringify({ kind, ...body }) });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || 'Analysis failed.');
+  const responseText = await response.text();
+  let result;
+  try { result = JSON.parse(responseText); } catch {
+    throw new Error(`The scan server returned an unexpected response (HTTP ${response.status}). Please share this status number so we can investigate.`);
+  }
+  if (!response.ok) throw new Error(result.error || `Analysis failed (HTTP ${response.status}).`);
   return result;
 }
 function questionList(items) { return items.map(q => ({ id: q.id, text: q.text })); }
@@ -52,8 +56,8 @@ async function scanQuote() {
       reviewRows(result.answers, 'scan-answer')+
       '<button type="button" onclick="applyScan()">Use reviewed details</button>';
     status.textContent = 'Review each suggested answer before applying it.';
+    $('quoteFile').value = '';
   } catch (e) { status.textContent = e.message; }
-  $('quoteFile').value = '';
 }
 function applyScan() {
   if (!pendingScan || pendingScan.contractorIndex !== state.contractorIndex) return;
