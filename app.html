@@ -218,15 +218,6 @@
       class="card"
     ></div>
 
-    <div class="card" id="scannerCard">
-      <h2>Scan this quote</h2>
-      <p class="muted">Optional. Upload a PDF or photo and review every suggested detail before using it. Files are sent for analysis and are not saved with your project.</p>
-      <input id="quoteFile" type="file" accept="application/pdf,image/jpeg,image/png,image/webp">
-      <div class="actions"><button class="secondary" type="button" onclick="scanQuote()">Read quote</button></div>
-      <div id="scanStatus" role="status"></div>
-      <div id="scanPreview"></div>
-    </div>
-
   </section>
 
 
@@ -496,16 +487,6 @@
     </div>
 
     <div class="card">
-      <h2>Check a contractor's reply</h2>
-      <p class="muted">Paste the email or text they sent back. Review the suggested answers before applying them to your report.</p>
-      <label>Contractor<select id="replyContractor"></select></label>
-      <label>Reply<textarea id="replyText" rows="6" maxlength="12000" placeholder="Paste their response here"></textarea></label>
-      <button class="secondary" onclick="checkReply()">Analyze reply</button>
-      <div id="replyStatus" role="status"></div>
-      <div id="replyPreview"></div>
-    </div>
-
-    <div class="card">
 
       <h2>
         What ChoiceGrade helped you uncover
@@ -555,7 +536,6 @@
 
 
 <script src="app.js?v=6.5"></script>
-<script src="analysis.js?v=6.5"></script>
 
 
 <div
