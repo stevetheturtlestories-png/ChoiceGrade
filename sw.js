@@ -1,4 +1,4 @@
-const CACHE = 'choicegrade-v6-quote-analysis';
+const CACHE = 'choicegrade-v6-manual-review';
 
 const ASSETS = [
   './',
@@ -11,7 +11,6 @@ const ASSETS = [
   'styles.css?v=6.5',
   'install.js?v=6.4',
   'app.js?v=6.5',
-  'analysis.js?v=6.5',
   'access.js?v=6.2a',
   'auth.js?v=6.2a',
   'account.js?v=6.2a',
