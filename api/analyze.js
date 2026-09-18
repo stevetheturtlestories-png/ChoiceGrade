@@ -83,7 +83,7 @@ export default async function handler(req, res) {
   } catch (e) {
     console.error('ChoiceGrade analysis:', e);
     const providerDetail = String(e.providerMessage || '').toLowerCase();
-    const code = e.providerCode === 'insufficient_quota' ? 'account_quota'
+    const code = ['insufficient_quota', 'credit_balance_exhausted'].includes(e.providerCode) ? 'account_quota'
       : e.providerStatus === 401 ? 'api_key_rejected'
       : e.providerStatus === 429 ? 'rate_limit'
       : e.providerStatus === 400 && /image|jpeg|png|webp|bitmap/.test(providerDetail) ? 'invalid_image'
