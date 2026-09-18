@@ -58,7 +58,12 @@ export default async function handler(req, res) {
         input: [{ role: 'user', content }], text: { format: { type: 'json_object' } }, max_output_tokens: 3500 })
     });
     const raw = await response.json();
-    if (!response.ok) throw new Error(`OpenAI status ${response.status}: ${raw.error?.message || 'unknown'}`);
+    if (!response.ok) {
+      const error = new Error(`OpenAI status ${response.status}: ${raw.error?.message || 'unknown'}`);
+      error.providerStatus = response.status;
+      error.providerCode = raw.error?.code;
+      throw error;
+    }
     const output = raw.output?.flatMap(x => x.content || []).find(x => x.type === 'output_text')?.text;
     if (!output) throw new Error('No analysis returned');
     const parsed = JSON.parse(output);
@@ -75,6 +80,25 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.error('ChoiceGrade analysis:', e);
-    return res.status(502).json({ error: 'Analysis failed. Please try again or enter the details manually.' });
+    const code = e.providerCode === 'insufficient_quota' ? 'account_quota'
+      : e.providerStatus === 401 ? 'api_key_rejected'
+      : e.providerStatus === 429 ? 'rate_limit'
+      : e.providerStatus === 400 ? 'request_rejected'
+      : e.providerStatus === 403 ? 'api_access_denied'
+      : e.message === 'No analysis returned' ? 'empty_response'
+      : e instanceof SyntaxError ? 'invalid_response'
+      : e.providerStatus ? 'provider_unavailable' : 'server_error';
+    const messages = {
+      account_quota: 'The OpenAI API account has no available quota. Check its billing and usage settings.',
+      api_key_rejected: 'The OpenAI API key was rejected. Check the key in Vercel Preview environment variables.',
+      rate_limit: 'The OpenAI API is rate limiting this request. Try again later.',
+      request_rejected: 'The OpenAI API rejected this document or request. Try a JPG or PNG photo of the quote.',
+      api_access_denied: 'The OpenAI API account does not have access to the configured model.',
+      empty_response: 'The analysis service returned no readable answer. Try a clearer quote photo.',
+      invalid_response: 'The analysis service returned an unreadable answer. Try again.',
+      provider_unavailable: 'The analysis service is temporarily unavailable. Try again later.',
+      server_error: 'The scan encountered a server error. Please share this code with support.'
+    };
+    return res.status(502).json({ error: `${messages[code]} (Code: ${code})` });
   }
 }
