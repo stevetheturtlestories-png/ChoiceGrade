@@ -1019,7 +1019,3 @@ footer{
     margin-top:4px;
   }
   }
-.scanRow { border-top: 1px solid #dce4e8; padding: 1rem 0; }
-.scanRow strong { display: block; margin-bottom: .4rem; }
-.scanRow .muted { margin-bottom: .5rem; overflow-wrap: anywhere; }
-#scannerCard input[type=file] { max-width: 100%; }
