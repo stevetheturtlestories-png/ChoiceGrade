@@ -108,6 +108,13 @@ export default async function handler(req, res) {
       provider_unavailable: 'The analysis service is temporarily unavailable. Try again later.',
       server_error: 'The scan encountered a server error. Please share this code with support.'
     };
-    return res.status(502).json({ error: `${messages[code]} (Code: ${code})` });
+    // The provider's 400 response names the rejected field; surface a short, redacted
+    // explanation to the signed-in caller so a scan failure can be diagnosed.
+    const detail = e.providerStatus === 400 ? String(e.providerMessage || '')
+      .replace(/data:[^\\s]+/gi, '[file data]')
+      .replace(/sk-[A-Za-z0-9_-]+/g, '[redacted key]')
+      .replace(/https?:\\/\\/[^\\s]+/gi, '[link]')
+      .slice(0, 300) : '';
+    return res.status(502).json({ error: `${messages[code]}${detail ? ` OpenAI says: ${detail}` : ''} (Code: ${code})` });
   }
 }
