@@ -807,3 +807,24 @@ footer p{
     font-size:26px;
   }
     }
+
+
+/* V6 conversion-focused landing page */
+.sampleSection{padding-top:64px}
+.sampleWrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 14px 45px #1731470d}
+.sampleTable{width:100%;border-collapse:collapse;min-width:650px}
+.sampleTable th,.sampleTable td{padding:16px 18px;border-bottom:1px solid var(--line);text-align:left}
+.sampleTable th{background:#f8fafb;color:var(--navy);font-size:14px}
+.sampleTable td:first-child{font-weight:800;color:var(--navy)}
+.sampleTable .included{color:var(--green2);font-weight:750}
+.sampleTable .unclear{color:#8a5a00;font-weight:750}
+.sampleNote{color:var(--muted);font-size:12px;line-height:1.5;margin:12px 0 18px}
+.sampleCta{width:max-content}
+.singlePrice{grid-template-columns:minmax(0,620px);justify-content:center}
+.singlePrice .priceCard{padding:32px}
+.securityLead{color:var(--muted);font-size:17px;line-height:1.55;max-width:720px}
+@media(max-width:540px){
+ .sampleSection{padding-top:52px}
+ .sampleCta{width:100%}
+ .singlePrice .priceCard{padding:24px 20px}
+}
