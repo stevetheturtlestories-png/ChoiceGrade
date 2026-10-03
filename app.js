@@ -45,19 +45,34 @@ function renderQuoteScanState(){
  }
 }
 function skipQuoteScan(){const card=$("quoteScanCard");if(card)card.classList.add("scanSkipped");}
+async function fileToDataUrl(file){
+ return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error("Could not read image."));r.readAsDataURL(file);});
+}
 async function scanQuoteFile(){
  const input=$("quoteFile"),file=input?.files?.[0],status=$("quoteScanStatus"),details=$("quoteTextDetails");
  if(!file){alert("Choose a PDF, screenshot or photo of the quote first.");return;}
  status.classList.remove("hidden");status.textContent="Reading quote…";
  try{
-   let text="";
-   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf"))text=await extractPdfText(file);
-   else if(file.type.startsWith("image/"))text=await extractImageText(file,status);
-   else throw new Error("Please choose a PDF or image.");
-   text=(text||"").replace(/\u0000/g," ").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-   if(text.length<20)throw new Error("I couldn't read enough text from this file. Try a clearer image, or enter the details manually.");
-   const c=currentContractor();c.quoteScan={fileName:file.name,text,scannedAt:new Date().toISOString(),suggestedAnswers:{}};
-   details.classList.remove("hidden");$("quoteText").value=text;
+   const c=currentContractor();
+   if(file.type.startsWith("image/")){
+     status.textContent="Reading the original quote image with smart vision…";
+     c.quoteScan={fileName:file.name,text:"",imageDataUrl:await fileToDataUrl(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
+     try{
+       await analyzeQuoteWithAI();
+       c.quoteScan.imageDataUrl=null;
+       status.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read the original image directly. Review the pre-filled details and answer only what remains unclear.`;
+       saveNow(false);return;
+     }catch(visionError){
+       console.warn("Direct vision unavailable, falling back to OCR:",visionError);
+       status.textContent="Smart vision was unavailable. Trying text recognition…";
+       c.quoteScan.text=await extractImageText(file,status);c.quoteScan.imageDataUrl=null;
+     }
+   }else if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf")){
+     c.quoteScan={fileName:file.name,text:await extractPdfText(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
+   }else throw new Error("Please choose a PDF or image.");
+   c.quoteScan.text=(c.quoteScan.text||"").replace(/\u0000/g," ").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+   if(c.quoteScan.text.length<20)throw new Error("I couldn't read enough text from this file. Try a clearer image, or enter the details manually.");
+   details.classList.remove("hidden");$("quoteText").value=c.quoteScan.text;
    analyzeQuoteText();
    status.innerHTML=`<strong>Quote text read.</strong> ChoiceGrade is now checking the wording and context…`;
    try{await analyzeQuoteWithAI();}catch(aiError){console.warn("AI quote analysis unavailable:",aiError);status.innerHTML=`<strong>Scan complete.</strong> I pre-filled the details I could recognize. Smart context analysis was unavailable, so please review the remaining questions.`;}
@@ -123,12 +138,13 @@ function analyzeQuoteText(){
  saveNow(false);
 }
 async function analyzeQuoteWithAI(){
- const c=currentContractor(),text=c?.quoteScan?.text||"";
- if(!text.trim())return;
+ const c=currentContractor(),text=c?.quoteScan?.text||"",imageDataUrl=c?.quoteScan?.imageDataUrl||null;
+ if(!text.trim()&&!imageDataUrl)return;
  const status=$("quoteScanStatus");
  const questions=allQuestions().map(q=>({id:q.id,question:named(q.text,c)}));
  const res=await fetch("/api/analyze-quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
   quoteText:text.slice(0,45000),
+  imageDataUrl:c?.quoteScan?.imageDataUrl||null,
   category:state.project.category,
   subtype:state.project.subtype,
   country:state.project.country,
