@@ -227,7 +227,8 @@ function autoApplyScanAnswers(c){
 }
 function remainingPhaseQuestions(){
  const c=currentContractor(),qs=phaseQuestions();
- if(!c?.quoteScan?.autoApplied)return qs;
+ // Always return only unanswered questions. This keeps the index stable after
+ // either AI-prefilled answers or homeowner answers are added.
  return qs.filter(q=>!c.answers[q.id]);
 }
 function renderQuestion(){
