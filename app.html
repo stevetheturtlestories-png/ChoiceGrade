@@ -216,7 +216,7 @@
 
     <div id="quoteScanCard" class="card quoteScanCard">
       <div class="eyebrow">QUOTE SCAN</div>
-      <h2>Add this contractor's quote</h2>
+      <h2 id="quoteScanTitle">Add your first contractor quote</h2>
       <p class="muted">Add each page of this contractor's quote in order. Multi-page PDFs are read together automatically. For photos or screenshots, add Page 1, then Page 2, Page 3, and so on.</p>
       <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*" onchange="addQuotePages(this.files)">
       <div id="quotePageList" class="quotePageList"></div>
@@ -553,7 +553,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="app.js?v=6.6"></script>
+<script src="app.js?v=6.7"></script>
 
 
 <div
