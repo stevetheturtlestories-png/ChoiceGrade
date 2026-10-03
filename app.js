@@ -38,7 +38,7 @@ function renderQuotePageList(){
  const list=$("quotePageList"),add=$("addQuotePageButton"),analyze=$("analyzeQuoteButton");
  if(!list)return;
  list.innerHTML=pendingQuotePages.map((file,i)=>`<div class="whyBox" style="margin-top:8px"><strong>Page ${i+1}</strong><div>${esc(file.name)}</div><button type="button" class="ghost" onclick="removeQuotePage(${i})">Remove</button></div>`).join("");
- if(add)add.textContent=pendingQuotePages.length?`+ Add page ${pendingQuotePages.length+1}`:"+ Add page 1";
+ if(add)add.textContent=pendingQuotePages.length?"+ Add another page to this quote":"+ Add first page";
  if(analyze)analyze.disabled=!pendingQuotePages.length;
 }
 function addQuotePages(fileList){
