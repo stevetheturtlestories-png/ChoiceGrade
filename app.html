@@ -217,8 +217,9 @@
     <div id="quoteScanCard" class="card quoteScanCard">
       <div class="eyebrow">QUOTE SCAN</div>
       <h2>Add this contractor's quote</h2>
-      <p class="muted">Upload a PDF or image. ChoiceGrade will extract readable text on your device, pre-fill details it can recognize, and mark likely answers for you to review. You stay in control of every answer.</p>
-      <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*">
+      <p class="muted">Upload a PDF or all image pages from this contractor's quote. Multi-page PDFs are read together. For photos or screenshots, select all pages at once. ChoiceGrade will analyze the complete quote and pre-fill only what it can support.</p>
+      <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*" multiple>
+      <div class="muted" style="margin-top:8px;font-size:.92rem">Tip: for a 2–3 page quote, select every page before tapping Scan quote.</div>
       <div class="actions">
         <button type="button" onclick="scanQuoteFile()">Scan quote</button>
         <button type="button" class="secondary" onclick="skipQuoteScan()">Enter details myself</button>
