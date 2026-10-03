@@ -241,9 +241,14 @@ function renderQuestion(){
 }
 function answerQuestion(a){
  const qs=remainingPhaseQuestions(),q=qs[state.qIndex],c=currentContractor();
- if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;c.answers[q.id]=a;saveNow(false);
+ if(!q){finishQuestionPhase();return;}
+ if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;
+ c.answers[q.id]=a;saveNow(false);
+ // remainingPhaseQuestions() shrinks immediately after answering because scanned/answered
+ // questions are filtered out. Keep the same index so it now points at the next
+ // unanswered question. If no question remains at that index, this phase is done.
  const next=remainingPhaseQuestions();
- if(state.qIndex<next.length){renderQuestion();}else finishQuestionPhase();
+ if(state.qIndex<next.length){renderQuestion();}else{state.qIndex=0;finishQuestionPhase();}
 }
 function finishQuestionPhase(){if(state.phase==="core"&&moduleQuestions().some(q=>!currentContractor().answers[q.id])){renderModuleIntro();go("moduleIntro");return;}finishContractorQuestions();}
 function renderModuleIntro(){const c=currentContractor(),count=moduleQuestions().filter(q=>!c.answers[q.id]).length;$("moduleIntroTitle").textContent=`A few questions specific to ${state.project.subtype}.`;$("moduleIntroText").textContent=`ChoiceGrade already filled what it could from ${c.name}'s quote. There ${count===1?"is":"are"} ${count} project-specific question${count===1?"":"s"} still needing your input.`;}
