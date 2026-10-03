@@ -8,16 +8,16 @@ export default async function handler(req,res){
  if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
  if(!process.env.OPENAI_API_KEY)return res.status(503).json({error:"Smart quote analysis is not configured"});
  try{
-  const {quoteText,imageDataUrl,category,subtype,country,questions}=req.body||{};
+  const {quoteText,imageDataUrls,category,subtype,country,questions}=req.body||{};
   const hasText=typeof quoteText==="string"&&quoteText.trim().length>=20;
-  const hasImage=typeof imageDataUrl==="string"&&/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(imageDataUrl);
-  if(!hasText&&!hasImage)return res.status(400).json({error:"Quote text or image is required"});
-  if(hasImage&&imageDataUrl.length>14_000_000)return res.status(413).json({error:"Quote image is too large"});
+  const images=Array.isArray(imageDataUrls)?imageDataUrls.slice(0,10).filter(x=>typeof x==="string"&&/^data:image\/(png|jpeg|jpg|webp);base64,/i.test(x)):[];
+  if(!hasText&&!images.length)return res.status(400).json({error:"Quote text or image is required"});
+  if(images.some(x=>x.length>14_000_000))return res.status(413).json({error:"A quote image is too large"});
   const safeQuestions=Array.isArray(questions)?questions.slice(0,45).map(q=>({id:cleanText(q?.id,80),question:cleanText(q?.question,500)})).filter(q=>q.id&&q.question):[];
-  const instructions=`You analyze contractor quotes for ChoiceGrade. The source may be an original quote image, extracted text, or both. When an image is supplied, read the image directly and preserve relationships between headings, columns, line items, quantities, prices, totals and fine print. Use ONLY facts supported by the supplied quote. Never infer that an item is included merely because it is normal practice. For every question choose Yes, Partly, Not Clear, or No. "No" means the quote affirmatively says the item is not provided/addressed; absence alone is "Not Clear". Confidence is 0 to 1. Evidence must be a short exact excerpt from the quote, maximum 18 words, or empty if no evidence. Extract fields only when clearly supported. Return JSON only.`;
+  const instructions=`You analyze contractor quotes for ChoiceGrade. The source may be an original quote image, extracted text, or both. When one or more images are supplied, treat them as consecutive pages of ONE contractor quote. Read all pages before answering. Never copy or infer a contractor name from prior context; if the supplied quote does not identify the company, return contractor_name as null. Preserve relationships between headings, columns, line items, quantities, prices, totals and fine print. Use ONLY facts supported by the supplied quote. Never infer that an item is included merely because it is normal practice. For every question choose Yes, Partly, Not Clear, or No. "No" means the quote affirmatively says the item is not provided/addressed; absence alone is "Not Clear". Confidence is 0 to 1. Evidence must be a short exact excerpt from the quote, maximum 18 words, or empty if no evidence. Extract fields only when clearly supported. Return JSON only.`;
   const project={category:cleanText(category),subtype:cleanText(subtype),country:cleanText(country)};
   const content=[{type:"input_text",text:JSON.stringify({project,questions:safeQuestions,quote_text:hasText?quoteText.slice(0,45000):""})}];
-  if(hasImage)content.push({type:"input_image",image_url:imageDataUrl,detail:"high"});
+  for(const imageDataUrl of images)content.push({type:"input_image",image_url:imageDataUrl,detail:"high"});
   const response=await client.responses.create({
    model:process.env.OPENAI_QUOTE_MODEL||"gpt-6-luna",instructions,input:[{role:"user",content}],max_output_tokens:6000,
    text:{format:{type:"json_schema",name:"choicegrade_quote_analysis",strict:true,schema:{
