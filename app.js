@@ -49,34 +49,47 @@ async function fileToDataUrl(file){
  return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error("Could not read image."));r.readAsDataURL(file);});
 }
 async function scanQuoteFile(){
- const input=$("quoteFile"),file=input?.files?.[0],status=$("quoteScanStatus"),details=$("quoteTextDetails");
- if(!file){alert("Choose a PDF, screenshot or photo of the quote first.");return;}
- status.classList.remove("hidden");status.textContent="Reading quote…";
+ const input=$("quoteFile"),files=[...(input?.files||[])],status=$("quoteScanStatus"),details=$("quoteTextDetails");
+ if(!files.length){alert("Choose a PDF or one or more images of the quote first.");return;}
+ const pdfs=files.filter(f=>f.type==="application/pdf"||f.name.toLowerCase().endsWith(".pdf"));
+ const images=files.filter(f=>f.type.startsWith("image/"));
+ if(pdfs.length&&files.length>1){alert("For PDFs, choose one PDF at a time. A multi-page PDF is automatically read as one quote.");return;}
+ if(!pdfs.length&&images.length!==files.length){alert("Please choose a PDF or image pages.");return;}
+ status.classList.remove("hidden");status.textContent=`Reading ${files.length>1?files.length+" quote pages":"quote"}…`;
  try{
    const c=currentContractor();
-   if(file.type.startsWith("image/")){
-     status.textContent="Reading the original quote image with smart vision…";
-     c.quoteScan={fileName:file.name,text:"",imageDataUrl:await fileToDataUrl(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
+   // A new scan must never inherit identity/details from the previous quote.
+   c.name="";c.price=0;c.deposit=0;c.availability="";c.duration="";c.priceType="Not Sure";
+   if(c.equipment)c.equipment={brand:"",model:"",efficiency:"",partsWarranty:"",labourWarranty:""};
+   if(images.length){
+     status.textContent=`Reading ${images.length} original quote image${images.length===1?"":"s"} with smart vision…`;
+     const imageDataUrls=[];
+     for(const file of images)imageDataUrls.push(await fileToDataUrl(file));
+     c.quoteScan={fileName:images.map(f=>f.name).join(", "),pageCount:images.length,text:"",imageDataUrls,scannedAt:new Date().toISOString(),suggestedAnswers:{}};
      try{
        await analyzeQuoteWithAI();
-       c.quoteScan.imageDataUrl=null;
-       status.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read the original image directly. Review the pre-filled details and answer only what remains unclear.`;
-       saveNow(false);return;
+       c.quoteScan.imageDataUrls=null;
+       if(!c.name)c.name="Company name not identified";
+       status.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read ${images.length} page${images.length===1?"":"s"} together as one quote. Review the pre-filled details and answer only what remains unclear.`;
+       renderContractor();saveNow(false);return;
      }catch(visionError){
        console.warn("Direct vision unavailable, falling back to OCR:",visionError);
        status.textContent="Smart vision was unavailable. Trying text recognition…";
-       c.quoteScan.text=await extractImageText(file,status);c.quoteScan.imageDataUrl=null;
+       let combined="";
+       for(let i=0;i<images.length;i++){status.textContent=`Reading page ${i+1} of ${images.length}…`;combined+=`\n--- PAGE ${i+1} ---\n`+await extractImageText(images[i],status);}
+       c.quoteScan.text=combined;c.quoteScan.imageDataUrls=null;
      }
-   }else if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf")){
-     c.quoteScan={fileName:file.name,text:await extractPdfText(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
-   }else throw new Error("Please choose a PDF or image.");
+   }else{
+     const file=pdfs[0];c.quoteScan={fileName:file.name,text:await extractPdfText(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
+   }
    c.quoteScan.text=(c.quoteScan.text||"").replace(/\u0000/g," ").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
-   if(c.quoteScan.text.length<20)throw new Error("I couldn't read enough text from this file. Try a clearer image, or enter the details manually.");
+   if(c.quoteScan.text.length<20)throw new Error("I couldn't read enough text from this quote. Try clearer images, or enter the details manually.");
    details.classList.remove("hidden");$("quoteText").value=c.quoteScan.text;
    analyzeQuoteText();
    status.innerHTML=`<strong>Quote text read.</strong> ChoiceGrade is now checking the wording and context…`;
    try{await analyzeQuoteWithAI();}catch(aiError){console.warn("AI quote analysis unavailable:",aiError);status.innerHTML=`<strong>Scan complete.</strong> I pre-filled the details I could recognize. Smart context analysis was unavailable, so please review the remaining questions.`;}
-   saveNow(false);
+   if(!c.name)c.name="Company name not identified";
+   renderContractor();saveNow(false);
  }catch(e){status.textContent=e?.message||"This quote could not be read. You can enter the details manually.";}
 }
 async function extractPdfText(file){
@@ -138,13 +151,13 @@ function analyzeQuoteText(){
  saveNow(false);
 }
 async function analyzeQuoteWithAI(){
- const c=currentContractor(),text=c?.quoteScan?.text||"",imageDataUrl=c?.quoteScan?.imageDataUrl||null;
- if(!text.trim()&&!imageDataUrl)return;
+ const c=currentContractor(),text=c?.quoteScan?.text||"",imageDataUrls=c?.quoteScan?.imageDataUrls||[];
+ if(!text.trim()&&!imageDataUrls.length)return;
  const status=$("quoteScanStatus");
  const questions=allQuestions().map(q=>({id:q.id,question:named(q.text,c)}));
  const res=await fetch("/api/analyze-quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
   quoteText:text.slice(0,45000),
-  imageDataUrl:c?.quoteScan?.imageDataUrl||null,
+  imageDataUrls,
   category:state.project.category,
   subtype:state.project.subtype,
   country:state.project.country,
