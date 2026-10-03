@@ -258,6 +258,17 @@ function renderModuleIntro(){const c=currentContractor(),count=moduleQuestions()
 function beginModule(){state.phase="module";state.qIndex=0;renderQuestion();go("questions");}
 function finishContractorQuestions(){renderReputation();go("reputation");}
 function previousQuestion(){if(state.qIndex>0){state.qIndex--;renderQuestion();return;}if(state.phase==="module"){state.phase="core";state.qIndex=Math.max(remainingPhaseQuestions().length-1,0);renderQuestion();return;}go("contractor");}
+function backFromReputation(){
+ const c=currentContractor();
+ c.reputation={skipped:false,rating:$("repRating").value,count:$("repCount").value,recent:$("repRecent").value,recurring:$("repRecurring").value,similar:$("repSimilar").value};
+ saveNow(false);
+ // All questionnaire answers are already saved. Returning from the optional
+ // reputation step should let the customer edit the contractor details they
+ // just entered rather than reopening an already-completed question phase.
+ renderContractor();
+ go("contractor");
+ window.scrollTo(0,0);
+}
 function renderReputation(){const c=currentContractor(),r=c.reputation||{};$("reputationProgress").textContent=`${c.name} · ${state.contractorIndex+1}/${state.contractors.length}`;$("repTitle").textContent=`What did you find about ${c.name}?`;$("repRating").value=r.rating||"";$("repCount").value=r.count||"";$("repRecent").value=r.recent||"Not Sure";$("repRecurring").value=r.recurring||"Not Sure";$("repSimilar").value=r.similar||"Not Sure";}
 function searchReviews(){const c=currentContractor();window.open(`https://www.google.com/search?q=${encodeURIComponent(`${c.name} ${state.project.region||""} reviews`)}`,"_blank");}
 function saveReputation(){const c=currentContractor();c.reputation={skipped:false,rating:$("repRating").value,count:$("repCount").value,recent:$("repRecent").value,recurring:$("repRecurring").value,similar:$("repSimilar").value};nextAfterReputation();}
