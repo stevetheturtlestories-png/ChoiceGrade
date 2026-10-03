@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="styles.css?v=6.3">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.min.mjs" type="module"></script>
   <script src="config.js"></script>
   <script src="access.js?v=6.2a"></script>
 </head>
@@ -213,10 +214,24 @@
 
     </div>
 
-    <div
-      id="contractorForm"
-      class="card"
-    ></div>
+    <div id="quoteScanCard" class="card quoteScanCard">
+      <div class="eyebrow">QUOTE SCAN</div>
+      <h2>Add this contractor's quote</h2>
+      <p class="muted">Upload a PDF or image. ChoiceGrade will extract readable text on your device, pre-fill details it can recognize, and mark likely answers for you to review. You stay in control of every answer.</p>
+      <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*">
+      <div class="actions">
+        <button type="button" onclick="scanQuoteFile()">Scan quote</button>
+        <button type="button" class="secondary" onclick="skipQuoteScan()">Enter details myself</button>
+      </div>
+      <div id="quoteScanStatus" class="scanStatus hidden"></div>
+      <details id="quoteTextDetails" class="quoteTextDetails hidden">
+        <summary>Review extracted text</summary>
+        <textarea id="quoteText" rows="10" placeholder="Extracted quote text"></textarea>
+        <div class="actions"><button type="button" class="secondary" onclick="analyzeQuoteText()">Analyze this text</button></div>
+      </details>
+    </div>
+
+    <div id="contractorForm" class="card"></div>
 
   </section>
 
@@ -535,7 +550,8 @@
 </footer>
 
 
-<script src="app.js?v=6.3"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="app.js?v=6.5"></script>
 
 
 <div
