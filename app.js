@@ -121,21 +121,56 @@ function analyzeQuoteText(){
  const status=$("quoteScanStatus");if(status)status.innerHTML=`<strong>Quote analyzed.</strong> ${Object.keys(c.quoteScan.suggestedAnswers).length} likely answer${Object.keys(c.quoteScan.suggestedAnswers).length===1?"":"s"} found. You'll review every suggested answer.`;
  saveNow(false);
 }
-function saveContractor(){const c=currentContractor();c.name=$("cName").value.trim()||`Contractor ${state.contractorIndex+1}`;c.email=$("cEmail").value.trim();c.price=+$("cPrice").value||0;c.deposit=+$("cDeposit").value||0;c.tax=+$("cTax").value||0;c.priceType=$("cPriceType").value;c.availability=$("cAvailability").value.trim();c.duration=$("cDuration").value.trim();if(state.project.category==="HVAC")c.equipment={brand:$("eqBrand").value.trim(),model:$("eqModel").value.trim(),efficiency:$("eqEff").value.trim(),partsWarranty:$("eqParts").value.trim(),labourWarranty:$("eqLabour").value.trim()};if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;renderContractor();saveNow(false);window.scrollTo(0,0);}else{state.contractorIndex=0;state.qIndex=0;state.phase="core";renderQuestion();go("questions");}}
+function saveContractor(){const c=currentContractor();c.name=$("cName").value.trim()||`Contractor ${state.contractorIndex+1}`;c.email=$("cEmail").value.trim();c.price=+$("cPrice").value||0;c.deposit=+$("cDeposit").value||0;c.tax=+$("cTax").value||0;c.priceType=$("cPriceType").value;c.availability=$("cAvailability").value.trim();c.duration=$("cDuration").value.trim();if(state.project.category==="HVAC")c.equipment={brand:$("eqBrand").value.trim(),model:$("eqModel").value.trim(),efficiency:$("eqEff").value.trim(),partsWarranty:$("eqParts").value.trim(),labourWarranty:$("eqLabour").value.trim()};if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;renderContractor();saveNow(false);window.scrollTo(0,0);}else{state.contractorIndex=0;state.qIndex=0;state.phase="core";const c0=currentContractor();const filled=autoApplyScanAnswers(c0);if(filled)c0.quoteScan.autoAppliedCount=filled;renderQuestion();go("questions");}}
 function previousContractor(){if(state.contractorIndex>0){state.contractorIndex--;renderContractor();}else go("setup");}
 function phaseQuestions(){return state.phase==="core"?CORE_QUESTIONS:moduleQuestions();}
-function renderQuestion(){const qs=phaseQuestions(),q=qs[state.qIndex],c=currentContractor();if(!q){finishQuestionPhase();return;}const suggestion=c.quoteScan?.suggestedAnswers?.[q.id];const totalPer=CORE_QUESTIONS.length+moduleQuestions().length;const phaseOffset=state.phase==="core"?0:CORE_QUESTIONS.length;const done=state.contractorIndex*totalPer+phaseOffset+state.qIndex,total=state.contractors.length*totalPer;$("questionProgress").textContent=`${c.name} · ${state.qIndex+1}/${qs.length}${state.phase==="module"?" project-specific":""}`;$("progressBar").style.width=`${Math.round(100*done/Math.max(total,1))}%`;$("qCategory").textContent=state.phase==="core"?q.category:`${state.project.category} CHECK`;$("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);const current=c.answers[q.id]||"";$("answerButtons").innerHTML=(suggestion&&!current?`<div class="scanSuggestion"><strong>Found in quote: likely ${esc(suggestion)}</strong><span>Please confirm the answer below.</span></div>`:"")+ANSWERS.map(([a,s])=>`<button class="${suggestion===a&&!current?"suggestedAnswer":""}" onclick="answerQuestion('${a}')"><span class="answerTitle">${a}${current===a?" ✓":""}${suggestion===a&&!current?" · Suggested":""}</span><span class="answerSub">${s}</span></button>`).join("");}
-function answerQuestion(a){const q=phaseQuestions()[state.qIndex],c=currentContractor();if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;c.answers[q.id]=a;saveNow(false);if(state.qIndex<phaseQuestions().length-1){state.qIndex++;renderQuestion();}else finishQuestionPhase();}
-function finishQuestionPhase(){if(state.phase==="core"&&moduleQuestions().length){renderModuleIntro();go("moduleIntro");return;}finishContractorQuestions();}
-function renderModuleIntro(){const count=moduleQuestions().length,c=currentContractor();$("moduleIntroTitle").textContent=`A few questions specific to ${state.project.subtype}.`;$("moduleIntroText").textContent=`You've completed the main review for ${c.name}. We have ${count} additional ${state.project.category.toLowerCase()} question${count===1?"":"s"} that can make this comparison more accurate.`;}
+function scanSuggestion(c,id){return c?.quoteScan?.suggestedAnswers?.[id]||null;}
+function autoApplyScanAnswers(c){
+ if(!c?.quoteScan?.suggestedAnswers)return 0;
+ let n=0;
+ for(const q of allQuestions()){
+  const a=scanSuggestion(c,q.id);
+  if(a&&!c.answers[q.id]){
+   c.answers[q.id]=a;
+   if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;
+   n++;
+  }
+ }
+ c.quoteScan.autoApplied=true;
+ return n;
+}
+function remainingPhaseQuestions(){
+ const c=currentContractor(),qs=phaseQuestions();
+ if(!c?.quoteScan?.autoApplied)return qs;
+ return qs.filter(q=>!c.answers[q.id]);
+}
+function renderQuestion(){
+ const c=currentContractor(),qs=remainingPhaseQuestions(),q=qs[state.qIndex];
+ if(!q){finishQuestionPhase();return;}
+ const answered=allQuestions().filter(x=>c.answers[x.id]).length,totalAll=allQuestions().length;
+ $("questionProgress").textContent=`${c.name} · ${state.qIndex+1}/${qs.length} remaining${state.phase==="module"?" project-specific":""}`;
+ $("progressBar").style.width=`${Math.round(100*answered/Math.max(totalAll,1))}%`;
+ $("qCategory").textContent=state.phase==="core"?q.category:`${state.project.category} CHECK`;
+ $("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);
+ const current=c.answers[q.id]||"";
+ $("answerButtons").innerHTML=ANSWERS.map(([a,s])=>`<button onclick="answerQuestion('${a}')"><span class="answerTitle">${a}${current===a?" ✓":""}</span><span class="answerSub">${s}</span></button>`).join("");
+}
+function answerQuestion(a){
+ const qs=remainingPhaseQuestions(),q=qs[state.qIndex],c=currentContractor();
+ if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;c.answers[q.id]=a;saveNow(false);
+ const next=remainingPhaseQuestions();
+ if(state.qIndex<next.length){renderQuestion();}else finishQuestionPhase();
+}
+function finishQuestionPhase(){if(state.phase==="core"&&moduleQuestions().some(q=>!currentContractor().answers[q.id])){renderModuleIntro();go("moduleIntro");return;}finishContractorQuestions();}
+function renderModuleIntro(){const c=currentContractor(),count=moduleQuestions().filter(q=>!c.answers[q.id]).length;$("moduleIntroTitle").textContent=`A few questions specific to ${state.project.subtype}.`;$("moduleIntroText").textContent=`ChoiceGrade already filled what it could from ${c.name}'s quote. There ${count===1?"is":"are"} ${count} project-specific question${count===1?"":"s"} still needing your input.`;}
 function beginModule(){state.phase="module";state.qIndex=0;renderQuestion();go("questions");}
 function finishContractorQuestions(){renderReputation();go("reputation");}
-function previousQuestion(){if(state.qIndex>0){state.qIndex--;renderQuestion();return;}if(state.phase==="module"){state.phase="core";state.qIndex=CORE_QUESTIONS.length-1;renderQuestion();return;}if(state.contractorIndex>0){state.contractorIndex--;state.phase=moduleQuestions().length?"module":"core";state.qIndex=phaseQuestions().length-1;renderQuestion();return;}go("contractor");}
+function previousQuestion(){if(state.qIndex>0){state.qIndex--;renderQuestion();return;}if(state.phase==="module"){state.phase="core";state.qIndex=Math.max(remainingPhaseQuestions().length-1,0);renderQuestion();return;}go("contractor");}
 function renderReputation(){const c=currentContractor(),r=c.reputation||{};$("reputationProgress").textContent=`${c.name} · ${state.contractorIndex+1}/${state.contractors.length}`;$("repTitle").textContent=`What did you find about ${c.name}?`;$("repRating").value=r.rating||"";$("repCount").value=r.count||"";$("repRecent").value=r.recent||"Not Sure";$("repRecurring").value=r.recurring||"Not Sure";$("repSimilar").value=r.similar||"Not Sure";}
 function searchReviews(){const c=currentContractor();window.open(`https://www.google.com/search?q=${encodeURIComponent(`${c.name} ${state.project.region||""} reviews`)}`,"_blank");}
 function saveReputation(){const c=currentContractor();c.reputation={skipped:false,rating:$("repRating").value,count:$("repCount").value,recent:$("repRecent").value,recurring:$("repRecurring").value,similar:$("repSimilar").value};nextAfterReputation();}
 function skipReputation(){currentContractor().reputation={skipped:true,rating:"",count:"",recent:"Not Sure",recurring:"Not Sure",similar:"Not Sure"};nextAfterReputation();}
-function nextAfterReputation(){if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;state.qIndex=0;state.phase="core";renderQuestion();go("questions");}else{renderResults();go("results");}}
+function nextAfterReputation(){if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;state.qIndex=0;state.phase="core";const c=currentContractor();const filled=autoApplyScanAnswers(c);if(filled)c.quoteScan.autoAppliedCount=filled;renderQuestion();go("questions");}else{renderResults();go("results");}}
 function metrics(c,mode="current"){
  let earned=0,total=0,criticalNo=0,clarify=0;
  for(const q of allQuestions()){
