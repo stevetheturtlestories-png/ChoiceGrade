@@ -59,7 +59,8 @@ async function scanQuoteFile(){
    const c=currentContractor();c.quoteScan={fileName:file.name,text,scannedAt:new Date().toISOString(),suggestedAnswers:{}};
    details.classList.remove("hidden");$("quoteText").value=text;
    analyzeQuoteText();
-   status.innerHTML=`<strong>Scan complete.</strong> I pre-filled the details I could recognize. Please review them before continuing.`;
+   status.innerHTML=`<strong>Quote text read.</strong> ChoiceGrade is now checking the wording and context…`;
+   try{await analyzeQuoteWithAI();}catch(aiError){console.warn("AI quote analysis unavailable:",aiError);status.innerHTML=`<strong>Scan complete.</strong> I pre-filled the details I could recognize. Smart context analysis was unavailable, so please review the remaining questions.`;}
    saveNow(false);
  }catch(e){status.textContent=e?.message||"This quote could not be read. You can enter the details manually.";}
 }
@@ -121,10 +122,54 @@ function analyzeQuoteText(){
  const status=$("quoteScanStatus");if(status)status.innerHTML=`<strong>Quote analyzed.</strong> ${Object.keys(c.quoteScan.suggestedAnswers).length} likely answer${Object.keys(c.quoteScan.suggestedAnswers).length===1?"":"s"} found. You'll review every suggested answer.`;
  saveNow(false);
 }
+async function analyzeQuoteWithAI(){
+ const c=currentContractor(),text=c?.quoteScan?.text||"";
+ if(!text.trim())return;
+ const status=$("quoteScanStatus");
+ const questions=allQuestions().map(q=>({id:q.id,question:named(q.text,c)}));
+ const res=await fetch("/api/analyze-quote",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+  quoteText:text.slice(0,45000),
+  category:state.project.category,
+  subtype:state.project.subtype,
+  country:state.project.country,
+  questions
+ })});
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok)throw new Error(data.error||"Smart quote analysis failed.");
+ if(data.fields){
+  if(data.fields.contractor_name&&!c.name)c.name=data.fields.contractor_name;
+  if(data.fields.total_price&&!c.price)c.price=Number(data.fields.total_price)||c.price;
+  if(data.fields.deposit&&!c.deposit)c.deposit=Number(data.fields.deposit)||c.deposit;
+  if(data.fields.price_type&&["Fixed Price","Estimate","Time & Materials","Not Sure"].includes(data.fields.price_type))c.priceType=data.fields.price_type;
+  if(data.fields.availability&&!c.availability)c.availability=data.fields.availability;
+  if(data.fields.duration&&!c.duration)c.duration=data.fields.duration;
+  if(state.project.category==="HVAC"&&data.fields.equipment){
+   const e=data.fields.equipment;c.equipment=c.equipment||{};
+   if(e.brand&&!c.equipment.brand)c.equipment.brand=e.brand;
+   if(e.model&&!c.equipment.model)c.equipment.model=e.model;
+   if(e.efficiency&&!c.equipment.efficiency)c.equipment.efficiency=e.efficiency;
+   if(e.parts_warranty&&!c.equipment.partsWarranty)c.equipment.partsWarranty=e.parts_warranty;
+   if(e.labour_warranty&&!c.equipment.labourWarranty)c.equipment.labourWarranty=e.labour_warranty;
+  }
+ }
+ c.quoteScan.aiAnswers={};
+ for(const item of data.answers||[]){
+  if(!item?.id||!["Yes","Partly","Not Clear","No"].includes(item.answer))continue;
+  c.quoteScan.aiAnswers[item.id]={answer:item.answer,confidence:Number(item.confidence)||0,evidence:item.evidence||"",reason:item.reason||""};
+  if((Number(item.confidence)||0)>=0.86)c.quoteScan.suggestedAnswers[item.id]=item.answer;
+ }
+ c.quoteScan.aiAnalyzed=true;
+ c.quoteScan.aiModel=data.model||"smart-analysis";
+ renderContractor();
+ const strong=Object.values(c.quoteScan.aiAnswers).filter(x=>x.confidence>=0.86).length;
+ if(status)status.innerHTML=`<strong>Smart scan complete.</strong> ChoiceGrade found ${strong} high-confidence answer${strong===1?"":"s"} from the quote. High-confidence items can be pre-filled; anything uncertain will still be asked.`;
+ saveNow(false);
+}
 function saveContractor(){const c=currentContractor();c.name=$("cName").value.trim()||`Contractor ${state.contractorIndex+1}`;c.email=$("cEmail").value.trim();c.price=+$("cPrice").value||0;c.deposit=+$("cDeposit").value||0;c.tax=+$("cTax").value||0;c.priceType=$("cPriceType").value;c.availability=$("cAvailability").value.trim();c.duration=$("cDuration").value.trim();if(state.project.category==="HVAC")c.equipment={brand:$("eqBrand").value.trim(),model:$("eqModel").value.trim(),efficiency:$("eqEff").value.trim(),partsWarranty:$("eqParts").value.trim(),labourWarranty:$("eqLabour").value.trim()};if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;renderContractor();saveNow(false);window.scrollTo(0,0);}else{state.contractorIndex=0;state.qIndex=0;state.phase="core";const c0=currentContractor();const filled=autoApplyScanAnswers(c0);if(filled)c0.quoteScan.autoAppliedCount=filled;renderQuestion();go("questions");}}
 function previousContractor(){if(state.contractorIndex>0){state.contractorIndex--;renderContractor();}else go("setup");}
 function phaseQuestions(){return state.phase==="core"?CORE_QUESTIONS:moduleQuestions();}
 function scanSuggestion(c,id){return c?.quoteScan?.suggestedAnswers?.[id]||null;}
+function scanEvidence(c,id){return c?.quoteScan?.aiAnswers?.[id]||null;}
 function autoApplyScanAnswers(c){
  if(!c?.quoteScan?.suggestedAnswers)return 0;
  let n=0;
@@ -151,7 +196,7 @@ function renderQuestion(){
  $("questionProgress").textContent=`${c.name} · ${state.qIndex+1}/${qs.length} remaining${state.phase==="module"?" project-specific":""}`;
  $("progressBar").style.width=`${Math.round(100*answered/Math.max(totalAll,1))}%`;
  $("qCategory").textContent=state.phase==="core"?q.category:`${state.project.category} CHECK`;
- $("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);
+ $("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);const ev=scanEvidence(c,q.id);if(ev?.evidence&&ev.confidence>=0.55)$("qWhy").textContent+=` Quote evidence: “${ev.evidence.slice(0,180)}”`;
  const current=c.answers[q.id]||"";
  $("answerButtons").innerHTML=ANSWERS.map(([a,s])=>`<button onclick="answerQuestion('${a}')"><span class="answerTitle">${a}${current===a?" ✓":""}</span><span class="answerSub">${s}</span></button>`).join("");
 }
