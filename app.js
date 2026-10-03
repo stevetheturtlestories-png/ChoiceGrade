@@ -31,11 +31,100 @@ function renderSubtypeOptions(){const cat=$("category").value;$("subtype").inner
 function selectedCount(n){state.project.count=Number(n);document.querySelectorAll(".choicePill").forEach(b=>b.classList.toggle("selected",Number(b.dataset.n)===Number(n)));}
 function hydrateSetup(){if($("projectName"))$("projectName").value=state.project.name||"";if($("country"))$("country").value=state.project.country||"US";if($("region"))$("region").value=state.project.region||"";if($("category")){$("category").value=state.project.category||"HVAC";renderSubtypeOptions();$("subtype").value=state.project.subtype||SUBTYPES[$("category").value][0];}selectedCount(state.project.count||3);}
 function startProject(){state.project={name:$("projectName").value||"Home project",country:$("country").value,region:$("region").value.trim(),category:$("category").value,subtype:$("subtype").value,count:Number(state.project.count||3),currency:$("country").value==="CA"?"CAD":"USD"};state.contractors=Array.from({length:state.project.count},()=>({name:"",email:"",price:0,deposit:0,tax:0,knownExtras:[],priceType:"Fixed Price",availability:"",duration:"",equipment:{brand:"",model:"",efficiency:"",partsWarranty:"",labourWarranty:""},answers:{},originalAnswers:{},clarifications:{},reputation:{skipped:false,rating:"",count:"",recent:"Not Sure",recurring:"Not Sure",similar:"Not Sure"}}));state.contractorIndex=0;renderContractor();go("contractor");}
-function renderContractor(){const c=currentContractor();$("contractorProgress").textContent=`Contractor ${state.contractorIndex+1} of ${state.contractors.length}`;const hvac=state.project.category==="HVAC";$("contractorForm").innerHTML=`<div class="eyebrow">STEP 2</div><h2>Contractor ${state.contractorIndex+1}</h2><label>Contractor / company name<input id="cName" value="${esc(c.name)}" placeholder="e.g. Joe's Heating"></label><label>Email (optional)<input id="cEmail" type="email" value="${esc(c.email)}"></label><div class="grid"><label>Quoted price<input id="cPrice" type="number" value="${c.price||""}"></label><label>Upfront payment / deposit<input id="cDeposit" type="number" value="${c.deposit||""}"></label></div><div class="grid"><label>Price type<select id="cPriceType">${["Fixed Price","Estimate","Time & Materials","Not Sure"].map(x=>`<option ${x===c.priceType?"selected":""}>${x}</option>`).join("")}</select></label><label>Additional tax amount (if not included)<input id="cTax" type="number" value="${c.tax||""}"></label></div><div class="grid"><label>Approximate start / availability<input id="cAvailability" value="${esc(c.availability)}" placeholder="e.g. 2–3 weeks"></label><label>Expected duration<input id="cDuration" value="${esc(c.duration)}" placeholder="e.g. 2 days"></label></div>${hvac?`<div class="whyBox"><strong>HVAC equipment details (optional)</strong><div>These appear in the side-by-side comparison.</div></div><div class="grid"><label>Brand<input id="eqBrand" value="${esc(c.equipment.brand)}"></label><label>Model<input id="eqModel" value="${esc(c.equipment.model)}"></label></div><div class="grid"><label>Efficiency rating<input id="eqEff" value="${esc(c.equipment.efficiency)}"></label><label>Parts / equipment warranty<input id="eqParts" value="${esc(c.equipment.partsWarranty)}"></label></div><label>Labour / workmanship warranty<input id="eqLabour" value="${esc(c.equipment.labourWarranty)}"></label>`:""}<button onclick="saveContractor()">${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}</button>`;}
+function renderContractor(){const c=currentContractor();renderQuoteScanState();$("contractorProgress").textContent=`Contractor ${state.contractorIndex+1} of ${state.contractors.length}`;const hvac=state.project.category==="HVAC";$("contractorForm").innerHTML=`<div class="eyebrow">STEP 2</div><h2>Contractor ${state.contractorIndex+1}</h2><label>Contractor / company name<input id="cName" value="${esc(c.name)}" placeholder="e.g. Joe's Heating"></label><label>Email (optional)<input id="cEmail" type="email" value="${esc(c.email)}"></label><div class="grid"><label>Quoted price<input id="cPrice" type="number" value="${c.price||""}"></label><label>Upfront payment / deposit<input id="cDeposit" type="number" value="${c.deposit||""}"></label></div><div class="grid"><label>Price type<select id="cPriceType">${["Fixed Price","Estimate","Time & Materials","Not Sure"].map(x=>`<option ${x===c.priceType?"selected":""}>${x}</option>`).join("")}</select></label><label>Additional tax amount (if not included)<input id="cTax" type="number" value="${c.tax||""}"></label></div><div class="grid"><label>Approximate start / availability<input id="cAvailability" value="${esc(c.availability)}" placeholder="e.g. 2–3 weeks"></label><label>Expected duration<input id="cDuration" value="${esc(c.duration)}" placeholder="e.g. 2 days"></label></div>${hvac?`<div class="whyBox"><strong>HVAC equipment details (optional)</strong><div>These appear in the side-by-side comparison.</div></div><div class="grid"><label>Brand<input id="eqBrand" value="${esc(c.equipment.brand)}"></label><label>Model<input id="eqModel" value="${esc(c.equipment.model)}"></label></div><div class="grid"><label>Efficiency rating<input id="eqEff" value="${esc(c.equipment.efficiency)}"></label><label>Parts / equipment warranty<input id="eqParts" value="${esc(c.equipment.partsWarranty)}"></label></div><label>Labour / workmanship warranty<input id="eqLabour" value="${esc(c.equipment.labourWarranty)}"></label>`:""}<button onclick="saveContractor()">${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}</button>`;}
+function renderQuoteScanState(){
+ const card=$("quoteScanCard"),status=$("quoteScanStatus"),details=$("quoteTextDetails"),txt=$("quoteText");
+ if(!card)return;
+ const c=currentContractor();
+ if(c?.quoteScan?.text){
+   status?.classList.remove("hidden");details?.classList.remove("hidden");
+   if(status)status.innerHTML=`<strong>Quote scanned.</strong> ${c.quoteScan.fileName?esc(c.quoteScan.fileName):""} — review the pre-filled details below before continuing.`;
+   if(txt)txt.value=c.quoteScan.text;
+ }else{
+   status?.classList.add("hidden");details?.classList.add("hidden");if(txt)txt.value="";
+ }
+}
+function skipQuoteScan(){const card=$("quoteScanCard");if(card)card.classList.add("scanSkipped");}
+async function scanQuoteFile(){
+ const input=$("quoteFile"),file=input?.files?.[0],status=$("quoteScanStatus"),details=$("quoteTextDetails");
+ if(!file){alert("Choose a PDF, screenshot or photo of the quote first.");return;}
+ status.classList.remove("hidden");status.textContent="Reading quote…";
+ try{
+   let text="";
+   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf"))text=await extractPdfText(file);
+   else if(file.type.startsWith("image/"))text=await extractImageText(file,status);
+   else throw new Error("Please choose a PDF or image.");
+   text=(text||"").replace(/\u0000/g," ").replace(/[ \t]+/g," ").replace(/\n{3,}/g,"\n\n").trim();
+   if(text.length<20)throw new Error("I couldn't read enough text from this file. Try a clearer image, or enter the details manually.");
+   const c=currentContractor();c.quoteScan={fileName:file.name,text,scannedAt:new Date().toISOString(),suggestedAnswers:{}};
+   details.classList.remove("hidden");$("quoteText").value=text;
+   analyzeQuoteText();
+   status.innerHTML=`<strong>Scan complete.</strong> I pre-filled the details I could recognize. Please review them before continuing.`;
+   saveNow(false);
+ }catch(e){status.textContent=e?.message||"This quote could not be read. You can enter the details manually.";}
+}
+async function extractPdfText(file){
+ const pdfjs=await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.min.mjs");
+ pdfjs.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.worker.min.mjs";
+ const pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+ let out="";
+ for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),content=await page.getTextContent();out+=content.items.map(x=>x.str).join(" ")+"\n";}
+ return out;
+}
+async function extractImageText(file,status){
+ if(!window.Tesseract)throw new Error("Image reader did not load. Try again or enter the details manually.");
+ status.textContent="Reading text from image…";
+ const r=await Tesseract.recognize(file,"eng",{logger:m=>{if(m.status==="recognizing text"&&status)status.textContent=`Reading image… ${Math.round((m.progress||0)*100)}%`;}});
+ return r?.data?.text||"";
+}
+function analyzeQuoteText(){
+ const c=currentContractor(),raw=$("quoteText")?.value||c.quoteScan?.text||"";
+ if(!raw.trim())return;
+ if(!c.quoteScan)c.quoteScan={};c.quoteScan.text=raw;
+ const t=raw.replace(/\r/g,"\n"),low=t.toLowerCase();
+ const moneyVals=[...t.matchAll(/(?:\$|cad\s*\$?|usd\s*\$?)\s*([0-9]{1,3}(?:[, ][0-9]{3})*(?:\.\d{2})?)/gi)].map(m=>Number(m[1].replace(/[ ,]/g,""))).filter(n=>n>=100);
+ const totalMatch=t.match(/(?:grand\s+total|total\s+(?:price|quote|estimate)?|proposal\s+total|amount\s+due)\s*[:\-]?\s*(?:cad|usd)?\s*\$?\s*([0-9][0-9, ]*(?:\.\d{2})?)/i);
+ if(totalMatch)c.price=Number(totalMatch[1].replace(/[ ,]/g,""))||c.price; else if(!c.price&&moneyVals.length)c.price=Math.max(...moneyVals);
+ const companyLines=t.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,12);
+ if(!c.name){const candidate=companyLines.find(x=>x.length>=3&&x.length<=70&&!/quote|estimate|proposal|invoice|date|phone|email|address|customer/i.test(x));if(candidate)c.name=candidate;}
+ const dep=t.match(/(?:deposit|down\s*payment|due\s+(?:on|upon)\s+(?:acceptance|signing))[^\n$]{0,40}\$?\s*([0-9][0-9,]*(?:\.\d{2})?)/i);
+ if(dep)c.deposit=Number(dep[1].replace(/,/g,""))||c.deposit;
+ const avail=t.match(/(?:start|availability|schedule)[^\n]{0,35}(\d+\s*(?:business\s*)?(?:day|days|week|weeks|month|months))/i);if(avail)c.availability=avail[1];
+ const dur=t.match(/(?:duration|complete|completion|work\s+will\s+take)[^\n]{0,35}(\d+\s*(?:business\s*)?(?:day|days|week|weeks|month|months))/i);if(dur)c.duration=dur[1];
+ if(/time\s*(?:and|&)\s*materials|t\s*&\s*m/i.test(t))c.priceType="Time & Materials";else if(/\bestimate\b/i.test(t)&&!/fixed\s+price/i.test(t))c.priceType="Estimate";else if(/fixed\s+(?:price|cost)|lump\s+sum/i.test(t))c.priceType="Fixed Price";
+ if(state.project.category==="HVAC"){
+   const model=t.match(/(?:model|model\s*#|model\s*no\.?)[\s:#-]*([A-Z0-9][A-Z0-9._\/-]{3,})/i);if(model)c.equipment.model=model[1];
+   const eff=t.match(/\b(\d{1,2}(?:\.\d+)?)\s*(SEER2?|AFUE|HSPF2?|EER2?)\b/i);if(eff)c.equipment.efficiency=`${eff[1]} ${eff[2].toUpperCase()}`;
+   const brands=["Carrier","Trane","Lennox","Daikin","Goodman","Amana","Rheem","Ruud","York","Bryant","Mitsubishi","Fujitsu","Bosch","Napoleon"];
+   const brand=brands.find(b=>new RegExp("\\b"+b+"\\b","i").test(t));if(brand)c.equipment.brand=brand;
+   const warr=t.match(/(\d{1,2})\s*(?:year|yr)s?[^\n]{0,30}(?:parts|equipment)\s+warranty/i);if(warr)c.equipment.partsWarranty=warr[0].trim();
+   const labour=t.match(/(\d{1,2})\s*(?:year|yr)s?[^\n]{0,30}(?:labou?r|workmanship)\s+warranty/i);if(labour)c.equipment.labourWarranty=labour[0].trim();
+ }
+ const evidence=(yes,no)=>yes.test(low)?"Yes":no?.test(low)?"No":null;
+ const suggestions={
+  price_total:c.price>0?"Yes":null,
+  scope:evidence(/scope of work|work includes|included work|we will (?:provide|install|replace)|installation includes/),
+  exclusions:evidence(/exclusions?|not included|excluded/),
+  cleanup:evidence(/clean\s*up|cleanup|debris|disposal|haul away|remove (?:old|existing)/),
+  warranty:evidence(/warrant(?:y|ies)|workmanship guarantee/),
+  permits:evidence(/permits?|inspection/),
+  payments:evidence(/payment schedule|progress payment|payment terms|due upon|due on completion/),
+  upfront:c.deposit>0?"Yes":evidence(/deposit|down payment/),
+  extra_approval:evidence(/change order|written approval|prior approval|authorization before/),
+  taxes:evidence(/tax(?:es)? included|includes? (?:gst|hst|pst|sales tax)/,/tax(?:es)? (?:extra|additional|not included)|plus (?:gst|hst|pst|tax)/),
+  equipment:state.project.category==="HVAC"&&(c.equipment.brand||c.equipment.model)?"Yes":null,
+  start:c.availability?"Yes":null,
+  duration:c.duration?"Yes":null
+ };
+ c.quoteScan.suggestedAnswers=Object.fromEntries(Object.entries(suggestions).filter(([,v])=>v));
+ renderContractor();
+ const status=$("quoteScanStatus");if(status)status.innerHTML=`<strong>Quote analyzed.</strong> ${Object.keys(c.quoteScan.suggestedAnswers).length} likely answer${Object.keys(c.quoteScan.suggestedAnswers).length===1?"":"s"} found. You'll review every suggested answer.`;
+ saveNow(false);
+}
 function saveContractor(){const c=currentContractor();c.name=$("cName").value.trim()||`Contractor ${state.contractorIndex+1}`;c.email=$("cEmail").value.trim();c.price=+$("cPrice").value||0;c.deposit=+$("cDeposit").value||0;c.tax=+$("cTax").value||0;c.priceType=$("cPriceType").value;c.availability=$("cAvailability").value.trim();c.duration=$("cDuration").value.trim();if(state.project.category==="HVAC")c.equipment={brand:$("eqBrand").value.trim(),model:$("eqModel").value.trim(),efficiency:$("eqEff").value.trim(),partsWarranty:$("eqParts").value.trim(),labourWarranty:$("eqLabour").value.trim()};if(state.contractorIndex<state.contractors.length-1){state.contractorIndex++;renderContractor();saveNow(false);window.scrollTo(0,0);}else{state.contractorIndex=0;state.qIndex=0;state.phase="core";renderQuestion();go("questions");}}
 function previousContractor(){if(state.contractorIndex>0){state.contractorIndex--;renderContractor();}else go("setup");}
 function phaseQuestions(){return state.phase==="core"?CORE_QUESTIONS:moduleQuestions();}
-function renderQuestion(){const qs=phaseQuestions(),q=qs[state.qIndex],c=currentContractor();if(!q){finishQuestionPhase();return;}const totalPer=CORE_QUESTIONS.length+moduleQuestions().length;const phaseOffset=state.phase==="core"?0:CORE_QUESTIONS.length;const done=state.contractorIndex*totalPer+phaseOffset+state.qIndex,total=state.contractors.length*totalPer;$("questionProgress").textContent=`${c.name} · ${state.qIndex+1}/${qs.length}${state.phase==="module"?" project-specific":""}`;$("progressBar").style.width=`${Math.round(100*done/Math.max(total,1))}%`;$("qCategory").textContent=state.phase==="core"?q.category:`${state.project.category} CHECK`;$("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);const current=c.answers[q.id]||"";$("answerButtons").innerHTML=ANSWERS.map(([a,s])=>`<button onclick="answerQuestion('${a}')"><span class="answerTitle">${a}${current===a?" ✓":""}</span><span class="answerSub">${s}</span></button>`).join("");}
+function renderQuestion(){const qs=phaseQuestions(),q=qs[state.qIndex],c=currentContractor();if(!q){finishQuestionPhase();return;}const suggestion=c.quoteScan?.suggestedAnswers?.[q.id];const totalPer=CORE_QUESTIONS.length+moduleQuestions().length;const phaseOffset=state.phase==="core"?0:CORE_QUESTIONS.length;const done=state.contractorIndex*totalPer+phaseOffset+state.qIndex,total=state.contractors.length*totalPer;$("questionProgress").textContent=`${c.name} · ${state.qIndex+1}/${qs.length}${state.phase==="module"?" project-specific":""}`;$("progressBar").style.width=`${Math.round(100*done/Math.max(total,1))}%`;$("qCategory").textContent=state.phase==="core"?q.category:`${state.project.category} CHECK`;$("qText").textContent=named(q.text,c);$("qWhy").textContent=named(q.why,c);const current=c.answers[q.id]||"";$("answerButtons").innerHTML=(suggestion&&!current?`<div class="scanSuggestion"><strong>Found in quote: likely ${esc(suggestion)}</strong><span>Please confirm the answer below.</span></div>`:"")+ANSWERS.map(([a,s])=>`<button class="${suggestion===a&&!current?"suggestedAnswer":""}" onclick="answerQuestion('${a}')"><span class="answerTitle">${a}${current===a?" ✓":""}${suggestion===a&&!current?" · Suggested":""}</span><span class="answerSub">${s}</span></button>`).join("");}
 function answerQuestion(a){const q=phaseQuestions()[state.qIndex],c=currentContractor();if(!(q.id in c.originalAnswers))c.originalAnswers[q.id]=a;c.answers[q.id]=a;saveNow(false);if(state.qIndex<phaseQuestions().length-1){state.qIndex++;renderQuestion();}else finishQuestionPhase();}
 function finishQuestionPhase(){if(state.phase==="core"&&moduleQuestions().length){renderModuleIntro();go("moduleIntro");return;}finishContractorQuestions();}
 function renderModuleIntro(){const count=moduleQuestions().length,c=currentContractor();$("moduleIntroTitle").textContent=`A few questions specific to ${state.project.subtype}.`;$("moduleIntroText").textContent=`You've completed the main review for ${c.name}. We have ${count} additional ${state.project.category.toLowerCase()} question${count===1?"":"s"} that can make this comparison more accurate.`;}
