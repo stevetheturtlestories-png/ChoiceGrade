@@ -100,7 +100,21 @@ window.ChoiceGradeAccess = (() => {
 
     updateAccountButton();
 
-    await handleCheckoutReturn();
+    const checkoutHandled = await handleCheckoutReturn();
+    if (checkoutHandled) return;
+
+    await resumePendingPurchase();
+  }
+
+  async function resumePendingPurchase() {
+    if (!user || hasPaidAccess()) return;
+
+    const plan = localStorage.getItem("choicegrade-pending-plan");
+    if (!plan) return;
+
+    // The customer reached authentication from the paywall. Continue the exact
+    // purchase they started instead of dropping them on the app start screen.
+    await beginCheckout(plan);
   }
 
   async function refreshEntitlement() {
@@ -263,11 +277,11 @@ window.ChoiceGradeAccess = (() => {
 
       cleanCheckoutUrl();
 
-      return;
+      return true;
     }
 
     if (checkout !== "success") {
-      return;
+      return false;
     }
 
     showCheckoutStatus(
@@ -304,7 +318,7 @@ window.ChoiceGradeAccess = (() => {
 
         hideCheckoutStatus(5000);
 
-        return;
+        return true;
       }
 
       await sleep(1000);
@@ -316,6 +330,7 @@ window.ChoiceGradeAccess = (() => {
     );
 
     cleanCheckoutUrl();
+    return true;
   }
 
   function cleanCheckoutUrl() {
