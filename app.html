@@ -217,11 +217,12 @@
     <div id="quoteScanCard" class="card quoteScanCard">
       <div class="eyebrow">QUOTE SCAN</div>
       <h2>Add this contractor's quote</h2>
-      <p class="muted">Upload a PDF or all image pages from this contractor's quote. Multi-page PDFs are read together. For photos or screenshots, select all pages at once. ChoiceGrade will analyze the complete quote and pre-fill only what it can support.</p>
-      <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*" multiple>
-      <div class="muted" style="margin-top:8px;font-size:.92rem">Tip: for a 2–3 page quote, select every page before tapping Scan quote.</div>
+      <p class="muted">Add each page of this contractor's quote in order. Multi-page PDFs are read together automatically. For photos or screenshots, add Page 1, then Page 2, Page 3, and so on.</p>
+      <input id="quoteFile" class="quoteFileInput" type="file" accept=".pdf,image/*" onchange="addQuotePages(this.files)">
+      <div id="quotePageList" class="quotePageList"></div>
       <div class="actions">
-        <button type="button" onclick="scanQuoteFile()">Scan quote</button>
+        <button id="addQuotePageButton" type="button" class="secondary" onclick="chooseAnotherQuotePage()">+ Add page 1</button>
+        <button id="analyzeQuoteButton" type="button" onclick="scanQuoteFile()" disabled>Analyze complete quote</button>
         <button type="button" class="secondary" onclick="skipQuoteScan()">Enter details myself</button>
       </div>
       <div id="quoteScanStatus" class="scanStatus hidden"></div>
@@ -552,7 +553,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="app.js?v=6.5"></script>
+<script src="app.js?v=6.6"></script>
 
 
 <div
