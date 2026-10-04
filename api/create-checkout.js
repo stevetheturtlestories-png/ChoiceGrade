@@ -13,10 +13,16 @@ const APP_URL = (
 ).replace(/\/$/, "");
 
 export default async function handler(req, res) {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://choicegradeapp.com"
-  );
+  const origin = req.headers.origin || "";
+  const allowedOrigin =
+    origin === "https://choicegradeapp.com" ||
+    origin === "https://www.choicegradeapp.com" ||
+    /^https:\/\/choice-grade-[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+  if (allowedOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
 
   res.setHeader(
     "Access-Control-Allow-Methods",
