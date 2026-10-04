@@ -20,7 +20,16 @@ async function signUp(){
  msg("Creating your account…");
  const {data,error}=await sb.auth.signUp({email,password,options:{emailRedirectTo:new URL(returnTo,location.href).href}});
  if(error){msg(error.message);return;}
+ // Supabase can intentionally return an obfuscated user object for an
+ // already-registered email. Do not tell the customer a confirmation was
+ // sent unless this response represents a newly accepted signup.
+ const identities=data.user?.identities;
+ if(!data.user||(!data.session&&Array.isArray(identities)&&identities.length===0)){
+  msg("We couldn't create a new account with that email. It may already have a ChoiceGrade account. Try signing in, use the email sign-in link, or use a different email.");
+  return;
+ }
  if(data.session){msg("Account created. Continuing to checkout…");setTimeout(()=>location.href=returnTo,400);return;}
+ localStorage.setItem("choicegrade-awaiting-confirmation",email);
  location.href="account-created.html";
 }
 async function sendMagicLink(){
