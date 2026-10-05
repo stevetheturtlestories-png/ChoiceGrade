@@ -5,7 +5,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const PRICE_IDS = {
   project_30: "price_1UFNJ90Ej99Aw7hgSGQ80RFT",
-  lifetime: "price_1UFNJA0Ej99Aw7hgREtAs2tb",
 };
 
 const APP_URL = (
@@ -14,10 +13,16 @@ const APP_URL = (
 ).replace(/\/$/, "");
 
 export default async function handler(req, res) {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://choicegradeapp.com"
-  );
+  const origin = req.headers.origin || "";
+  const allowedOrigin =
+    origin === "https://choicegradeapp.com" ||
+    origin === "https://www.choicegradeapp.com" ||
+    /^https:\/\/choice-grade-[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+  if (allowedOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
 
   res.setHeader(
     "Access-Control-Allow-Methods",
@@ -134,13 +139,18 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(
-      "ChoiceGrade checkout error:",
-      error
-    );
+    console.error("ChoiceGrade checkout error:", error);
+
+    // Preview builds need a useful diagnostic while we harden checkout.
+    // Stripe errors are safe to classify by code/type without exposing secrets.
+    const diagnostic =
+      error?.code ||
+      error?.type ||
+      error?.name ||
+      "unknown_error";
 
     return res.status(500).json({
-      error: "Unable to start Stripe Checkout",
+      error: `Unable to start Stripe Checkout (${diagnostic})`,
     });
   }
       }
