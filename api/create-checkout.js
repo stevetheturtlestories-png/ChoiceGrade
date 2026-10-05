@@ -139,13 +139,18 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error(
-      "ChoiceGrade checkout error:",
-      error
-    );
+    console.error("ChoiceGrade checkout error:", error);
+
+    // Preview builds need a useful diagnostic while we harden checkout.
+    // Stripe errors are safe to classify by code/type without exposing secrets.
+    const diagnostic =
+      error?.code ||
+      error?.type ||
+      error?.name ||
+      "unknown_error";
 
     return res.status(500).json({
-      error: "Unable to start Stripe Checkout",
+      error: `Unable to start Stripe Checkout (${diagnostic})`,
     });
   }
       }
