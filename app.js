@@ -201,6 +201,18 @@ async function analyzeQuoteWithAI(){
   c.quoteScan.aiAnswers[item.id]={answer:item.answer,confidence:Number(item.confidence)||0,evidence:item.evidence||"",reason:item.reason||""};
   if((Number(item.confidence)||0)>=0.86)c.quoteScan.suggestedAnswers[item.id]=item.answer;
  }
+ if(location.hostname.includes("fix-jpeg-scan-failure")){
+  const fields=data.fields||{};
+  const eq=fields.equipment||{};
+  const display=c.equipment||{};
+  const show=v=>v===null||v===undefined||v===""?"(not found)":String(v);
+  const rows=[["Contractor",fields.contractor_name,c.name],["Total price",fields.total_price,c.price],["Duration",fields.duration,c.duration],["Brand",eq.brand,display.brand],["Model",eq.model,display.model],["Efficiency",eq.efficiency,display.efficiency],["Parts warranty",eq.parts_warranty,display.partsWarranty],["Labour warranty",eq.labour_warranty,display.labourWarranty]];
+  const diagnostic=rows.map(([label,ai,shown])=>label+"\\n  AI: "+show(ai)+"\\n  Form: "+show(shown)).join("\\n\\n");
+  const existing=document.getElementById("scanDebugPanel");if(existing)existing.remove();
+  const panel=document.createElement("div");panel.id="scanDebugPanel";panel.style.cssText="white-space:pre-wrap;overflow-wrap:anywhere;padding:14px;margin:12px 0;border:2px solid #d97706;border-radius:8px;background:#fff7ed;color:#292524;font:13px/1.5 monospace";
+  panel.textContent="PREVIEW DIAGNOSTIC — AI response vs form\\n\\n"+diagnostic+"\\n\\nModel: "+show(data.model);
+  if(status)status.insertAdjacentElement("afterend",panel);
+ }
  c.quoteScan.aiAnalyzed=true;
  c.quoteScan.aiModel=data.model||"smart-analysis";
  renderContractor();
