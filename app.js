@@ -88,9 +88,11 @@ async function scanQuoteFile(){
     const s=$("quoteScanStatus");if(s)s.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read ${images.length} page${images.length===1?"":"s"} together as one quote. Review the pre-filled details below, then tap ${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}.`;
     return;
    }catch(visionError){
-    console.warn("Direct vision unavailable, falling back to OCR:",visionError);status.textContent="Smart vision was unavailable. Trying text recognition…";
-    let combined="";for(let i=0;i<images.length;i++){status.textContent=`Reading page ${i+1} of ${images.length}…`;combined+=`\n--- PAGE ${i+1} ---\n`+await extractImageText(images[i],status);}
-    c.quoteScan.text=combined;c.quoteScan.imageDataUrls=null;
+    console.error("Smart vision scan failed:",visionError);
+    status.textContent="AI scanning failed: "+(visionError?.message||"Please try again.")+" No quote fields were guessed or saved. Try again or enter details manually.";
+    c.quoteScan.imageDataUrls=null;
+    renderContractor();
+    return;
    }
   }else{
    const file=pdfs[0];c.quoteScan={fileName:file.name,pageCount:null,text:await extractPdfText(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
