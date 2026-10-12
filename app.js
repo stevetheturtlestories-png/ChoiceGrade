@@ -88,9 +88,11 @@ async function scanQuoteFile(){
     const s=$("quoteScanStatus");if(s)s.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read ${images.length} page${images.length===1?"":"s"} together as one quote. Review the pre-filled details below, then tap ${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}.`;
     return;
    }catch(visionError){
-    console.warn("Direct vision unavailable, falling back to OCR:",visionError);status.textContent="Smart vision was unavailable. Trying text recognition…";
-    let combined="";for(let i=0;i<images.length;i++){status.textContent=`Reading page ${i+1} of ${images.length}…`;combined+=`\n--- PAGE ${i+1} ---\n`+await extractImageText(images[i],status);}
-    c.quoteScan.text=combined;c.quoteScan.imageDataUrls=null;
+    console.error("Smart vision scan failed:",visionError);
+    status.textContent="AI scanning failed: "+(visionError?.message||"Please try again.")+" No quote fields were guessed or saved. Try again or enter details manually.";
+    c.quoteScan.imageDataUrls=null;
+    renderContractor();
+    return;
    }
   }else{
    const file=pdfs[0];c.quoteScan={fileName:file.name,pageCount:null,text:await extractPdfText(file),scannedAt:new Date().toISOString(),suggestedAnswers:{}};
@@ -202,6 +204,8 @@ async function analyzeQuoteWithAI(){
  c.quoteScan.aiAnalyzed=true;
  c.quoteScan.aiModel=data.model||"smart-analysis";
  renderContractor();
+ const debugPanel=document.getElementById("scanDebugPanel");
+ if(debugPanel){const scanStatus=document.getElementById("quoteScanStatus");if(scanStatus)scanStatus.insertAdjacentElement("afterend",debugPanel);debugPanel.scrollIntoView({block:"nearest",behavior:"smooth"});}
  const strong=Object.values(c.quoteScan.aiAnswers).filter(x=>x.confidence>=0.86).length;
  if(status)status.innerHTML=`<strong>Smart scan complete.</strong> ChoiceGrade found ${strong} high-confidence answer${strong===1?"":"s"} from the quote. High-confidence items can be pre-filled; anything uncertain will still be asked.`;
  saveNow(false);
