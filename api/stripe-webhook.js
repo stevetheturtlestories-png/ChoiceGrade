@@ -38,7 +38,7 @@ async function grantEntitlement(session) {
     throw new Error("Stripe session is missing user_id metadata");
   }
 
-  if (plan !== "project_30" && plan !== "lifetime") {
+  if (plan !== "project_30") {
     throw new Error("Stripe session contains an invalid plan");
   }
 
