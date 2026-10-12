@@ -216,6 +216,8 @@ async function analyzeQuoteWithAI(){
  c.quoteScan.aiAnalyzed=true;
  c.quoteScan.aiModel=data.model||"smart-analysis";
  renderContractor();
+ const debugPanel=document.getElementById("scanDebugPanel");
+ if(debugPanel){const scanStatus=document.getElementById("quoteScanStatus");if(scanStatus)scanStatus.insertAdjacentElement("afterend",debugPanel);debugPanel.scrollIntoView({block:"nearest",behavior:"smooth"});}
  const strong=Object.values(c.quoteScan.aiAnswers).filter(x=>x.confidence>=0.86).length;
  if(status)status.innerHTML=`<strong>Smart scan complete.</strong> ChoiceGrade found ${strong} high-confidence answer${strong===1?"":"s"} from the quote. High-confidence items can be pre-filled; anything uncertain will still be asked.`;
  saveNow(false);
