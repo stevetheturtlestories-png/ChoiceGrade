@@ -153,4 +153,4 @@ export default async function handler(req, res) {
       error: `Unable to start Stripe Checkout (${diagnostic})`,
     });
   }
-      }
+}
