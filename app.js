@@ -187,7 +187,7 @@ async function analyzeQuoteWithAI(){
   questions
  })});
  const data=await res.json().catch(()=>({}));
- if(!res.ok)throw new Error(data.error||"Smart quote analysis failed.");
+ if(!res.ok)throw new Error((data.error||"Quote analysis request failed.")+" (HTTP "+res.status+(data.code?", code "+data.code:"")+")");
  c.quoteScan.fieldSummary=data.fields?Object.entries(data.fields).filter(([k,v])=>k!=="equipment"&&v!==null&&v!==""&&v!==0).map(([k,v])=>k+": "+String(v)).concat(Object.entries(data.fields.equipment||{}).filter(([,v])=>v!==null&&v!=="").map(([k,v])=>"equipment."+k+": "+String(v))).join("\n").slice(0,1000)||"AI returned no recognized fields":"AI response missing fields";
  if(data.fields){
   if(data.fields.contractor_name&&!c.name)c.name=data.fields.contractor_name;
