@@ -1,4 +1,4 @@
-const CACHE = 'choicegrade-v6-heatpump';
+const CACHE = 'choicegrade-v6-scan-611';
 
 const ASSETS = [
   './',
@@ -10,7 +10,7 @@ const ASSETS = [
   'auth.css?v=6.2a',
   'styles.css?v=6.3',
   'install.js?v=6.4',
-  'app.js?v=6.3',
+  'app.js?v=6.11',
   'access.js?v=6.2a',
   'auth.js?v=6.2a',
   'account.js?v=6.2a',
