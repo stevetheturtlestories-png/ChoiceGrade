@@ -9,6 +9,7 @@ const ANSWERS=[["Yes","Clearly addressed"],["Partly","Some information provided"
 let state={version:6.2,project:{count:3,country:"US",category:"HVAC",subtype:"Furnace replacement / upgrade",currency:"USD"},contractors:[],contractorIndex:0,qIndex:0,phase:"core",screen:"welcome"};
 const $=id=>document.getElementById(id);
 function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function quotedMoney(n){return Number(n)>0?money(n):"Not provided";}
 function money(n){return new Intl.NumberFormat(state.project.country==="CA"?"en-CA":"en-US",{style:"currency",currency:state.project.currency||"USD",maximumFractionDigits:0}).format(Number(n)||0);}
 function moduleQuestions(){return (MODULES[state.project.category]||[]).concat(state.project.category==="HVAC"&&state.project.subtype==="Heat pump"?HEAT_PUMP_QUESTIONS:[]);}
 function allQuestions(){return CORE_QUESTIONS.concat(moduleQuestions());}
@@ -457,13 +458,13 @@ function renderResults(){
   return `<div class="card">
    <div class="scoreRow"><div><div class="eyebrow">${rank===0?"MOST COMPLETE WRITTEN PROPOSAL":"CONTRACTOR"}</div><h2>${esc(c.name)}</h2></div><div><div class="scoreBig">${m.score}</div><div class="muted">${band(m.score)}</div></div></div>
    ${m.clarificationTotal?`<div class="clarificationProgress"><strong>${m.resolved} of ${m.clarificationTotal} clarification question${m.clarificationTotal===1?"":"s"} resolved</strong><div class="miniProgress"><span style="width:${Math.round(100*m.resolved/Math.max(m.clarificationTotal,1))}%"></span></div>${changed?`<div class="scoreHistory">Original Quote Clarity: <b>${orig.score}/100</b> → Current: <b>${m.score}/100</b></div>`:""}</div>`:""}
-   <div class="detailGrid"><div class="detailBox"><b>Quoted price</b><span>${money(c.price)}</span></div><div class="detailBox"><b>Adjusted comparison cost</b><span>${money(m.adjusted)}${m.unknownExtras?" + unknown":""}</span></div><div class="detailBox"><b>Review history</b><span>${reviewBand(c)}</span></div><div class="detailBox"><b>Items still to clarify</b><span>${m.unresolved}</span></div></div>
+   <div class="detailGrid"><div class="detailBox"><b>Quoted price</b><span>${quotedMoney(c.price)}</span></div><div class="detailBox"><b>Adjusted comparison cost</b><span>${c.price>0?money(m.adjusted):"Cannot calculate"}${m.unknownExtras?" + unknown":""}</span></div><div class="detailBox"><b>Review history</b><span>${reviewBand(c)}</span></div><div class="detailBox"><b>Items still to clarify</b><span>${m.unresolved}</span></div></div>
    <span class="badge ${m.criticalNo?"red":"green"}">${m.criticalNo} critical-weight issue${m.criticalNo===1?"":"s"}</span><span class="badge ${m.unresolved?"amber":"green"}">${m.unresolved} unresolved</span><span class="badge">${m.depPct}% upfront</span>
    <div class="actions"><button class="secondary" onclick="addExtra(${idx})">Add known cost</button></div>
   </div>`;
  }).join("");
  const headers=rows.map(([c])=>`<th>${esc(c.name)}</th>`).join(""),row=(label,fn)=>`<tr><td>${label}</td>${rows.map(([c,m])=>`<td>${fn(c,m)}</td>`).join("")}</tr>`;
- let table=`<table><tr><th>Comparison</th>${headers}</tr>`+row("Quoted price",c=>money(c.price))+row("Adjusted comparison cost",(c,m)=>money(m.adjusted)+(m.unknownExtras?"+":""))+row("Current quote clarity",(c,m)=>`${m.score}/100`)+row("Original quote clarity",c=>`${metrics(c,"original").score}/100`)+row("Review history",c=>reviewBand(c))+row("Upfront payment",(c,m)=>`${m.depPct}%`)+row("Start / availability",c=>esc(c.availability||"Not provided"))+row("Expected duration",c=>esc(c.duration||"Not provided"))+row("Unresolved clarifications",(c,m)=>m.unresolved);
+ let table=`<table><tr><th>Comparison</th>${headers}</tr>`+row("Quoted price",c=>quotedMoney(c.price))+row("Adjusted comparison cost",(c,m)=>c.price>0?money(m.adjusted)+(m.unknownExtras?"+":""):"Cannot calculate")+row("Current quote clarity",(c,m)=>`${m.score}/100`)+row("Original quote clarity",c=>`${metrics(c,"original").score}/100`)+row("Review history",c=>reviewBand(c))+row("Upfront payment",(c,m)=>`${m.depPct}%`)+row("Start / availability",c=>esc(c.availability||"Not provided"))+row("Expected duration",c=>esc(c.duration||"Not provided"))+row("Unresolved clarifications",(c,m)=>m.unresolved);
  if(state.project.category==="HVAC")table+=row("HVAC brand",c=>esc(c.equipment.brand||"—"))+row("HVAC model",c=>esc(c.equipment.model||"—"))+row("Efficiency",c=>esc(c.equipment.efficiency||"—"))+row("Parts/equipment warranty",c=>esc(c.equipment.partsWarranty||"—"))+row("Labour warranty",c=>esc(c.equipment.labourWarranty||"—"));
  $("compareTable").innerHTML=table+"</table>";
  $("clarifications").innerHTML=state.contractors.map((c,i)=>{
