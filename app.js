@@ -444,6 +444,7 @@ function renderResults(){
  const cgPaid=(window.ChoiceGradeAccess?.hasPaidAccess?.()||false);
  const resultsSection=$("results");
  if(resultsSection)resultsSection.classList.toggle("resultsLocked",!cgPaid);
+ const lockedAction=$("lockedCheckoutAction");if(lockedAction)lockedAction.style.display=cgPaid?"none":"block";
  if(!cgPaid){
   $("resultSummary").textContent="Your comparison is ready. Unlock your complete ChoiceGrade analysis to view the results.";
   window.ChoiceGradeAccess?.gateResults?.();
