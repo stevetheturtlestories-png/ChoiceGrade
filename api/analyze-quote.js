@@ -20,7 +20,7 @@ export default async function handler(req,res){
   const content=[{type:"input_text",text:JSON.stringify({project,questions:safeQuestions,quote_text:hasText?quoteText.slice(0,45000):""})}];
   for(const imageDataUrl of images)content.push({type:"input_image",image_url:imageDataUrl,detail:"high"});
   const response=await client.responses.create({
-   model:process.env.OPENAI_QUOTE_MODEL||"gpt-4.1-mini",instructions:instructions+" "+extractionRules,input:[{role:"user",content}],max_output_tokens:6000,
+   model:process.env.OPENAI_QUOTE_MODEL||"gpt-4.1-mini",instructions:instructions+" "+extractionRules,input:[{role:"user",content}],max_output_tokens:8000,
    text:{format:{type:"json_schema",name:"choicegrade_quote_analysis",strict:true,schema:{
     type:"object",additionalProperties:false,
     properties:{
