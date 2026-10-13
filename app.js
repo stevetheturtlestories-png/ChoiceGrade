@@ -35,12 +35,17 @@ function startProject(){state.project={name:$("projectName").value||"Home projec
 function ordinalWord(n){return ["first","second","third","fourth","fifth"][n-1]||`${n}th`;}
 function renderContractor(){const c=currentContractor();renderQuoteScanState();const position=ordinalWord(state.contractorIndex+1);$("contractorProgress").textContent=`Contractor ${state.contractorIndex+1} of ${state.contractors.length}`;const scanTitle=$("quoteScanTitle");if(scanTitle)scanTitle.textContent=`Add your ${position} contractor quote`;const hvac=state.project.category==="HVAC";$("contractorForm").innerHTML=`<div class="eyebrow">STEP 2 · CONTRACTOR ${state.contractorIndex+1} OF ${state.contractors.length}</div><h2>${position.charAt(0).toUpperCase()+position.slice(1)} contractor details</h2><label>Contractor / company name<input id="cName" value="${esc(c.name)}" placeholder="e.g. Joe's Heating"></label><label>Email (optional)<input id="cEmail" type="email" value="${esc(c.email)}"></label><div class="grid"><label>Quoted price<input id="cPrice" type="number" value="${c.price||""}"></label><label>Upfront payment / deposit<input id="cDeposit" type="number" value="${c.deposit||""}"></label></div><div class="grid"><label>Price type<select id="cPriceType">${["Fixed Price","Estimate","Time & Materials","Not Sure"].map(x=>`<option ${x===c.priceType?"selected":""}>${x}</option>`).join("")}</select></label><label>Additional tax amount (if not included)<input id="cTax" type="number" value="${c.tax||""}"></label></div><div class="grid"><label>Approximate start / availability<input id="cAvailability" value="${esc(c.availability)}" placeholder="e.g. 2–3 weeks"></label><label>Expected duration<input id="cDuration" value="${esc(c.duration)}" placeholder="e.g. 2 days"></label></div>${hvac?`<div class="whyBox"><strong>HVAC equipment details (optional)</strong><div>These appear in the side-by-side comparison.</div></div><div class="grid"><label>Brand<input id="eqBrand" value="${esc(c.equipment.brand)}"></label><label>Model<input id="eqModel" value="${esc(c.equipment.model)}"></label></div><div class="grid"><label>Efficiency rating<input id="eqEff" value="${esc(c.equipment.efficiency)}"></label><label>Parts / equipment warranty<input id="eqParts" value="${esc(c.equipment.partsWarranty)}"></label></div><label>Labour / workmanship warranty<input id="eqLabour" value="${esc(c.equipment.labourWarranty)}"></label>`:""}<button onclick="saveContractor()">${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}</button>`;}
 let pendingQuotePages=[];
+let scanBusy=false;const scanHistory=new Map();
+function scanKey(files){return state.contractorIndex+":"+files.map(f=>[f.name,f.size,f.lastModified,f.type].join(":")).join("|");}
+function scanResult(c,title,detail){c.quoteScan=c.quoteScan||{};c.quoteScan.report={title,detail};displayScanResult(c);}
+function displayScanResult(c){const n=c?.quoteScan?.report,el=$("quoteScanStatus");if(n&&el){el.classList.remove("hidden");el.innerHTML="<strong>"+esc(n.title)+"</strong><div style='white-space:pre-wrap;margin-top:6px'>"+esc(n.detail)+"</div>";}}
+
 function renderQuotePageList(){
  const list=$("quotePageList"),add=$("addQuotePageButton"),analyze=$("analyzeQuoteButton");
  if(!list)return;
  list.innerHTML=pendingQuotePages.map((file,i)=>`<div class="whyBox" style="margin-top:8px"><strong>Page ${i+1}</strong><div>${esc(file.name)}</div><button type="button" class="ghost" onclick="removeQuotePage(${i})">Remove</button></div>`).join("");
  if(add)add.textContent=pendingQuotePages.length?"+ Add another page to this quote":"+ Add first page";
- if(analyze)analyze.disabled=!pendingQuotePages.length;
+ if(analyze){analyze.disabled=!pendingQuotePages.length||scanBusy;analyze.textContent=scanBusy?"Scanning… please wait":"All pages added — scan my quote";}
 }
 function addQuotePages(fileList){
  const files=[...(fileList||[])];if(!files.length)return;
@@ -61,19 +66,24 @@ function renderQuoteScanState(){
  const card=$("quoteScanCard"),status=$("quoteScanStatus"),details=$("quoteTextDetails"),txt=$("quoteText");
  if(!card)return;const c=currentContractor();
  renderQuotePageList();
- if(c?.quoteScan&&(c.quoteScan.text||c.quoteScan.aiAnalyzed)){
+ if(c?.quoteScan&&(c.quoteScan.text||c.quoteScan.aiAnalyzed||c.quoteScan.report)){
   status?.classList.remove("hidden");
   if(c.quoteScan.text){details?.classList.remove("hidden");if(txt)txt.value=c.quoteScan.text;}else details?.classList.add("hidden");
-  if(status)status.innerHTML=`<strong>Quote scanned.</strong> ${c.quoteScan.fileName?esc(c.quoteScan.fileName):""} — review the pre-filled details below, then continue.`;
+  if(c.quoteScan.report)displayScanResult(c);else if(status)status.innerHTML=`<strong>Quote scanned.</strong> ${c.quoteScan.fileName?esc(c.quoteScan.fileName):""} — review the pre-filled details below, then continue.`;
  }else{status?.classList.add("hidden");details?.classList.add("hidden");if(txt)txt.value="";}
 }
 function skipQuoteScan(){pendingQuotePages=[];renderQuotePageList();const card=$("quoteScanCard");if(card)card.classList.add("scanSkipped");}
 async function fileToDataUrl(file){return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error("Could not read image."));r.readAsDataURL(file);});}
 async function scanQuoteFile(){
  const files=[...pendingQuotePages],status=$("quoteScanStatus"),details=$("quoteTextDetails");
+ if(scanBusy)return;
  if(!files.length){alert("Add at least one quote page first.");return;}
+ const key=scanKey(files),previous=scanHistory.get(key);
+ if(previous==="success"){scanResult(currentContractor(),"Duplicate scan blocked","This file was already scanned; no API credits used.");return;}
+ if(previous==="failed"&&!confirm("This scan already failed. Retrying may use additional API credits. Retry?"))return;
  const pdfs=files.filter(f=>f.type==="application/pdf"||f.name.toLowerCase().endsWith(".pdf")),images=files.filter(f=>f.type.startsWith("image/"));
  if(pdfs.length&&files.length>1){alert("Use either one PDF or image pages for a quote, not both.");return;}
+ scanBusy=true;renderQuotePageList();
  status.classList.remove("hidden");status.textContent=`Reading ${files.length>1?files.length+" quote pages":"quote"}…`;
  try{
   const c=currentContractor();c.name="";c.price=0;c.deposit=0;c.availability="";c.duration="";c.priceType="Not Sure";c.answers={};c.originalAnswers={};
@@ -84,12 +94,11 @@ async function scanQuoteFile(){
    c.quoteScan={fileName:images.map((f,i)=>`Page ${i+1}: ${f.name}`).join(", "),pageCount:images.length,text:"",imageDataUrls,scannedAt:new Date().toISOString(),suggestedAnswers:{}};
    try{
     await analyzeQuoteWithAI();c.quoteScan.imageDataUrls=null;if(!c.name)c.name="Company name not identified";
-    pendingQuotePages=[];renderContractor();saveNow(false);
-    const s=$("quoteScanStatus");if(s)s.innerHTML=`<strong>Smart vision scan complete.</strong> ChoiceGrade read ${images.length} page${images.length===1?"":"s"} together as one quote. Review the pre-filled details below, then tap ${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}.`;
+    scanHistory.set(key,"success");pendingQuotePages=[];scanResult(c,"Vision scan finished",c.quoteScan.fieldSummary||"No fields returned");renderContractor();saveNow(false);
     return;
    }catch(visionError){
     console.error("Smart vision scan failed:",visionError);
-    status.textContent="AI scanning failed: "+(visionError?.message||"Please try again.")+" No quote fields were guessed or saved. Try again or enter details manually.";
+    scanHistory.set(key,"failed");scanResult(c,"Vision scan failed",visionError?.message||"Unknown error");
     c.quoteScan.imageDataUrls=null;
     renderContractor();
     return;
@@ -102,9 +111,9 @@ async function scanQuoteFile(){
   details.classList.remove("hidden");$("quoteText").value=c.quoteScan.text;analyzeQuoteText();
   status.innerHTML="<strong>Quote text read.</strong> ChoiceGrade is now checking the wording and context…";
   try{await analyzeQuoteWithAI();}catch(aiError){console.warn("AI quote analysis unavailable:",aiError);}
-  if(!c.name)c.name="Company name not identified";pendingQuotePages=[];renderContractor();saveNow(false);
-  const s=$("quoteScanStatus");if(s)s.innerHTML=`<strong>Scan complete.</strong> Review the pre-filled details below, then tap ${state.contractorIndex===state.contractors.length-1?"Start quote review":"Save & next contractor"}.`;
- }catch(e){status.textContent=e?.message||"This quote could not be read. You can enter the details manually.";}
+  if(!c.name)c.name="Company name not identified";scanHistory.set(key,"success");pendingQuotePages=[];scanResult(c,"PDF scan finished",c.quoteScan.fieldSummary||"Text extracted; no AI fields");renderContractor();saveNow(false);
+ }catch(e){scanHistory.set(key,"failed");scanResult(currentContractor(),"Scan failed",e?.message||"Could not read quote");}
+ finally{scanBusy=false;renderQuotePageList();}
 }
 async function extractPdfText(file){
  const pdfjs=await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.8.69/build/pdf.min.mjs");
@@ -179,6 +188,7 @@ async function analyzeQuoteWithAI(){
  })});
  const data=await res.json().catch(()=>({}));
  if(!res.ok)throw new Error(data.error||"Smart quote analysis failed.");
+ c.quoteScan.fieldSummary=data.fields?Object.entries(data.fields).filter(([k,v])=>k!=="equipment"&&v!==null&&v!==""&&v!==0).map(([k,v])=>k+": "+String(v)).concat(Object.entries(data.fields.equipment||{}).filter(([,v])=>v!==null&&v!=="").map(([k,v])=>"equipment."+k+": "+String(v)).join("\n").slice(0,1000)||"AI returned no recognized fields":"AI response missing fields";
  if(data.fields){
   if(data.fields.contractor_name&&!c.name)c.name=data.fields.contractor_name;
   if(data.fields.total_price&&!c.price)c.price=Number(data.fields.total_price)||c.price;
@@ -207,7 +217,7 @@ async function analyzeQuoteWithAI(){
  const debugPanel=document.getElementById("scanDebugPanel");
  if(debugPanel){const scanStatus=document.getElementById("quoteScanStatus");if(scanStatus)scanStatus.insertAdjacentElement("afterend",debugPanel);debugPanel.scrollIntoView({block:"nearest",behavior:"smooth"});}
  const strong=Object.values(c.quoteScan.aiAnswers).filter(x=>x.confidence>=0.86).length;
- if(status)status.innerHTML=`<strong>Smart scan complete.</strong> ChoiceGrade found ${strong} high-confidence answer${strong===1?"":"s"} from the quote. High-confidence items can be pre-filled; anything uncertain will still be asked.`;
+ // Scan result is displayed by scanQuoteFile after form updates.
  saveNow(false);
 }
 function saveContractor(){const c=currentContractor();c.name=$("cName").value.trim()||`Contractor ${state.contractorIndex+1}`;c.email=$("cEmail").value.trim();c.price=+$("cPrice").value||0;c.deposit=+$("cDeposit").value||0;c.tax=+$("cTax").value||0;c.priceType=$("cPriceType").value;c.availability=$("cAvailability").value.trim();c.duration=$("cDuration").value.trim();if(state.project.category==="HVAC")c.equipment={brand:$("eqBrand").value.trim(),model:$("eqModel").value.trim(),efficiency:$("eqEff").value.trim(),partsWarranty:$("eqParts").value.trim(),labourWarranty:$("eqLabour").value.trim()};const filled=autoApplyScanAnswers(c);if(filled)c.quoteScan.autoAppliedCount=filled;state.qIndex=0;state.phase="core";go("questions");renderQuestion();}
