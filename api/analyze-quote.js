@@ -34,8 +34,10 @@ export default async function handler(req,res){
     },required:["fields","answers"]
    }}}
   });
-  const parsed=JSON.parse(response.output_text),validIds=new Set(safeQuestions.map(q=>q.id));
+  if(!response.output_text){console.error("Quote AI empty response",{status:response.status,incomplete_details:response.incomplete_details,request_id:response._request_id});return res.status(502).json({error:response.status==="incomplete"?"AI response was cut off before completing. No fields extracted.":"AI returned no readable response.",code:"AI_EMPTY_RESPONSE"});}
+  let parsed;try{parsed=JSON.parse(response.output_text);}catch(parseError){console.error("Quote AI invalid JSON",{status:response.status,length:response.output_text.length,request_id:response._request_id});return res.status(502).json({error:"AI returned an invalid response. No fields extracted.",code:"AI_INVALID_RESPONSE"});}
+  const validIds=new Set(safeQuestions.map(q=>q.id));
   parsed.answers=(parsed.answers||[]).filter(x=>validIds.has(x.id)).map(x=>({...x,evidence:cleanText(x.evidence,220),reason:cleanText(x.reason,300)}));
   return res.status(200).json({...parsed,model:response.model});
- }catch(error){console.error("ChoiceGrade quote analysis error:",error);return res.status(500).json({error:"Smart quote analysis failed"});}
+ }catch(error){const status=Number(error?.status)||500;const code=error?.code||error?.type||"SERVER_ERROR";console.error("ChoiceGrade quote analysis error:",{status,code,message:error?.message,request_id:error?.request_id});const message=status===401?"OpenAI API key was rejected. Check Vercel OPENAI_API_KEY.":status===429?"OpenAI rate limit or insufficient API credits. Check OpenAI billing.":status===413?"Quote image exceeds the upload size limit.":status===400?"OpenAI rejected the analysis request. Check model and response schema.":status===408||status===504?"Quote analysis timed out.":status>=500&&status<600&&status!==500?"OpenAI service is temporarily unavailable.":"Quote analysis encountered a server error.";return res.status(status>=400&&status<=599?status:500).json({error:message,code:String(code).slice(0,100)});}
 }
