@@ -441,6 +441,13 @@ function addExtra(i){const c=state.contractors[i],label=prompt("What additional 
 function renderResults(){
  state.contractors.forEach(ensureClarifications);
  const cgPaid=(window.ChoiceGradeAccess?.hasPaidAccess?.()||false);
+ const resultsSection=$("results");
+ if(resultsSection)resultsSection.classList.toggle("resultsLocked",!cgPaid);
+ if(!cgPaid){
+  $("resultSummary").textContent="Your comparison is ready. Unlock your complete ChoiceGrade analysis to view the results.";
+  window.ChoiceGradeAccess?.gateResults?.();
+  return;
+ }
  const rows=state.contractors.map(c=>[c,metrics(c)]),ranked=[...rows].sort((a,b)=>b[1].score-a[1].score),best=ranked[0],low=[...rows].filter(x=>x[0].price>0).sort((a,b)=>a[0].price-b[0].price)[0];
  $("resultSummary").textContent=`${best[0].name} currently has the most complete written proposal based on the information you provided${low?`, while ${low[0].name} has the lowest quoted price`:""}. ChoiceGrade does not choose the contractor for you.`;
  const fs=generateFindings(rows);
