@@ -188,7 +188,7 @@ async function analyzeQuoteWithAI(){
  })});
  const data=await res.json().catch(()=>({}));
  if(!res.ok)throw new Error(data.error||"Smart quote analysis failed.");
- c.quoteScan.fieldSummary=data.fields?Object.entries(data.fields).filter(([k,v])=>k!=="equipment"&&v!==null&&v!==""&&v!==0).map(([k,v])=>k+": "+String(v)).concat(Object.entries(data.fields.equipment||{}).filter(([,v])=>v!==null&&v!=="").map(([k,v])=>"equipment."+k+": "+String(v)).join("\n").slice(0,1000)||"AI returned no recognized fields":"AI response missing fields";
+ c.quoteScan.fieldSummary=data.fields?Object.entries(data.fields).filter(([k,v])=>k!=="equipment"&&v!==null&&v!==""&&v!==0).map(([k,v])=>k+": "+String(v)).concat(Object.entries(data.fields.equipment||{}).filter(([,v])=>v!==null&&v!=="").map(([k,v])=>"equipment."+k+": "+String(v))).join("\n").slice(0,1000)||"AI returned no recognized fields":"AI response missing fields";
  if(data.fields){
   if(data.fields.contractor_name&&!c.name)c.name=data.fields.contractor_name;
   if(data.fields.total_price&&!c.price)c.price=Number(data.fields.total_price)||c.price;
