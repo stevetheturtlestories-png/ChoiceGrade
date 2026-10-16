@@ -11,7 +11,7 @@
   "description": "Compare contractor quotes, ask smarter questions, and choose with confidence.",
   "icons": [
     {
-      "src": "choicegrade-cg-mark.svg",
+      "src": "choicegrade-cg-mark.svg?v=2",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
