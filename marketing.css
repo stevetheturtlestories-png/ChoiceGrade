@@ -52,7 +52,7 @@ button{
   justify-content:space-between;
   align-items:center;
   padding:12px max(18px,calc((100vw - 1120px)/2));
-  background:rgba(17,38,58,.97);
+  background:#11263a;
   color:#fff;
   box-shadow:0 6px 24px #0002;
 }
@@ -705,7 +705,13 @@ footer p{
 
   .siteHeader{
     padding:10px 13px;
+    min-height:70px;
+    isolation:isolate;
   }
+  .brandLink strong{font-size:16px;letter-spacing:.035em}
+  .brandIcon{flex-shrink:0}
+  .hero{position:relative}
+  .hero h1{overflow-wrap:break-word}
 
   .brandLink small{
     display:none;
